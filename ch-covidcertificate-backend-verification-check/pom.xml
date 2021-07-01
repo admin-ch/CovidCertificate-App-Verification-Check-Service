@@ -13,6 +13,7 @@
     <modules>
         <module>ch-covidcertificate-backend-verification-check-ws</module>
         <module>ch-covidcertificate-backend-verification-check-report</module>
+        <module>ch-covidcertificate-backend-verification-check-model</module>
     </modules>
 
     <properties>

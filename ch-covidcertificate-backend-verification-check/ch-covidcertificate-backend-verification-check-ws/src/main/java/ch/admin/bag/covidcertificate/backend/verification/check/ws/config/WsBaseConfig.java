@@ -10,7 +10,9 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,8 +20,18 @@ import org.springframework.context.annotation.Configuration;
 public abstract class WsBaseConfig {
 
     @Bean
-    public VerificationController verificationController() {
-        return new VerificationController();
+    public VerificationController verificationController(
+            TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
+        return new VerificationController(trustListConfig, verifierHelper);
     }
 
+    @Bean
+    public TrustListConfig trustListConfig() {
+        return new TrustListConfig();
+    }
+
+    @Bean
+    public VerifierHelper verifierHelper() {
+        return new VerifierHelper();
+    }
 }

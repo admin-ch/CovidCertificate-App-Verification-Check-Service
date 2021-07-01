@@ -16,7 +16,7 @@ class VerificationControllerTest extends BaseControllerTest {
     private static final Logger logger =
         LoggerFactory.getLogger(VerificationControllerTest.class);
 
-    private static final String BASE_URL = "/v1/verify";
+    private static final String BASE_URL = "/v1";
 
     @Test
     void helloTest() throws Exception {
