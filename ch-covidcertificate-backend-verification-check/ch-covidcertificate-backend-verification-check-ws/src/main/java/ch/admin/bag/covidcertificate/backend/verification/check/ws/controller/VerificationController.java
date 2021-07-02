@@ -15,6 +15,9 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustLi
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.LibWrapper;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.ubique.openapi.docannotations.Documentation;
 import org.slf4j.Logger;
@@ -55,8 +58,14 @@ public class VerificationController {
     public @ResponseBody ResponseEntity<VerificationResponse> verify(
             @RequestBody HCertPayload hCertPayload) {
         // Decode hcert
-        final var dccHolder = LibWrapper.decodeHCert(hCertPayload);
-        // Update trustList
+        final var decodeState = LibWrapper.decodeHCert(hCertPayload);
+        DccHolder dccHolder;
+        if (decodeState instanceof DecodeState.SUCCESS) {
+            dccHolder = ((SUCCESS) decodeState).getDccHolder();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+        // Get trustList, update if necessary
         var trustList = trustListConfig.getTrustList();
         if (trustList == null) {
             verifierHelper.updateTrustListConfig();
