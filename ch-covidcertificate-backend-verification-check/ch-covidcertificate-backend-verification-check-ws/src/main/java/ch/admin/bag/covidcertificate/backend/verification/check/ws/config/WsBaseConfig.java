@@ -10,8 +10,8 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +33,9 @@ public abstract class WsBaseConfig {
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
     private String rulesEndpoint;
 
+    @Value("${verifier.rules.endpoint:/trust/v1/metadata}")
+    private String valueSetsEndpoint;
+
     @Bean
     public VerificationController verificationController(
             TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
@@ -47,6 +50,11 @@ public abstract class WsBaseConfig {
     @Bean
     public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
         return new VerifierHelper(
-                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
+                trustListConfig,
+                verifierBaseUrl,
+                dscEndpoint,
+                revocationEndpoint,
+                rulesEndpoint,
+                valueSetsEndpoint);
     }
 }

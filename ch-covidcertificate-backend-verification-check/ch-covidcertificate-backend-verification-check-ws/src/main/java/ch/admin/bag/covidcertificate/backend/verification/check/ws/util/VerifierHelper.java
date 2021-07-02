@@ -1,51 +1,63 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RulesResponse;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
-import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertsResponse;
-import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.ClientCert;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class VerifierHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(VerifierHelper.class);
+    private static final ObjectMapper objectMapper =
+            new ObjectMapper().registerModule(new KotlinModule());
+    private static final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final TrustListConfig trustListConfig;
     private final String verifierBaseUrl;
     private final String dscEndpoint;
     private final String revocationEndpoint;
     private final String rulesEndpoint;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final String valueSetsEndpoint;
+
+    private final Map<String, String> etagMap = new HashMap<>();
 
     public VerifierHelper(
             TrustListConfig trustListConfig,
             String verifierBaseUrl,
             String dscEndpoint,
             String revocationEndpoint,
-            String rulesEndpoint) {
+            String rulesEndpoint,
+            String valueSetsEndpoint) {
         this.trustListConfig = trustListConfig;
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
+        this.valueSetsEndpoint = valueSetsEndpoint;
     }
 
     public void updateTrustListConfig() {
-        // TODO Implement once core-SDK models available
-        getDSCs();
-        getRevokedCerts();
-        getNationalRules();
+        final var jwks = getDSCs();
+        final var revokedCerts = getRevokedCerts();
+        final var nationalRules = getNationalRules();
+        var trustList = new TrustList(jwks, revokedCerts, nationalRules);
+        trustListConfig.setTrustList(trustList);
     }
 
     /**
@@ -53,22 +65,23 @@ public class VerifierHelper {
      *
      * @return a JWKs object as required by the SDK-core mapped from a list of ClientCerts
      */
-    private List<ClientCert> getDSCs() {
+    private Jwks getDSCs() {
         logger.info("Updating list of DSCs");
+        final var params = new HashMap<String, String>();
+        params.put("certFormat", "ANDROID");
         try {
-            HttpRequest request =
-                    HttpRequest.newBuilder()
-                            .uri(new URI(verifierBaseUrl + dscEndpoint))
-                            .GET()
-                            .build();
-            final HttpResponse<String> response = httpClient.send(request, BodyHandlers.ofString());
-            final CertsResponse certsResponse =
-                    objectMapper.readValue(response.body(), CertsResponse.class);
-            return certsResponse.getCerts();
+            String response = getResponse(dscEndpoint, params);
+            if (response.isBlank()) {
+                logger.info("ETag hasn't changed - No need to update");
+                return trustListConfig.getTrustList().getSignatures();
+            } else {
+                return objectMapper.readValue(response, Jwks.class);
+            }
         } catch (URISyntaxException | IOException | InterruptedException e) {
-            logger.error("An error occurred while downloading the list of DSCs: {}", e.getMessage());
+            logger.error(
+                    "An error occurred while downloading the list of DSCs: {}", e.getMessage());
+            return new Jwks(new ArrayList<>());
         }
-        return new ArrayList<>();
     }
 
     /**
@@ -77,9 +90,22 @@ public class VerifierHelper {
      *
      * @return RevokedCertificates object as required by the SDK-core
      */
-    private List<String> getRevokedCerts() {
-        // TODO Implement
-        return new ArrayList<>();
+    private RevokedCertificates getRevokedCerts() {
+        logger.info("Updating list of revoked certificates");
+        try {
+            final String response = getResponse(revocationEndpoint, new HashMap<>());
+            if (response.isBlank()) {
+                logger.info("ETag hasn't changed - No need to update");
+                return trustListConfig.getTrustList().getRevokedCertificates();
+            } else {
+                return objectMapper.readValue(response, RevokedCertificates.class);
+            }
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error(
+                    "An error occurred while downloading the list of revoked certificates: {}",
+                    e.getMessage());
+            return new RevokedCertificates(new ArrayList<>(), 0);
+        }
     }
 
     /**
@@ -87,8 +113,51 @@ public class VerifierHelper {
      *
      * @return RuleSet object as required by the SDK-core
      */
-    private void getNationalRules() {
-        // TODO Implement
-        return;
+    private RuleSet getNationalRules() {
+        logger.info("Updating list of verification rules");
+        var rules = new RulesResponse();
+        try {
+            final String response = getResponse(rulesEndpoint, new HashMap<>());
+            if (response.isBlank()) {
+                logger.info("ETag hasn't changed - No need to update");
+                rules.setRules(trustListConfig.getTrustList().getRuleSet().getRules());
+            } else {
+                rules = objectMapper.readValue(response, RulesResponse.class);
+            }
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error(
+                    "An error occurred while downloading the list of verification rules: {}",
+                    e.getMessage());
+        }
+        // TODO Get ValueSets from Verifier-Service
+        return new RuleSet(rules.getRules(), null, 0);
+    }
+
+    private String getResponse(String endpoint, Map<String, String> params)
+            throws URISyntaxException, IOException, InterruptedException {
+        final var strings = verifierBaseUrl.split("://");
+        final var builder =
+                UriComponentsBuilder.newInstance()
+                        .scheme(strings[0])
+                        .host(strings[1])
+                        .path(endpoint);
+        for (var entry : params.entrySet()) {
+            builder.queryParam(entry.getKey(), entry.getValue());
+        }
+        final var uri = builder.build().toUriString();
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(new URI(uri))
+                        .GET()
+                        .header("ETag", etagMap.getOrDefault(endpoint, ""))
+                        .build();
+        final var response = httpClient.send(request, BodyHandlers.ofString());
+        if (response.statusCode() == 304) {
+            return "";
+        } else {
+            final var eTag = response.headers().firstValue("ETag");
+            eTag.ifPresent(tag -> etagMap.put(endpoint, tag));
+            return response.body();
+        }
     }
 }

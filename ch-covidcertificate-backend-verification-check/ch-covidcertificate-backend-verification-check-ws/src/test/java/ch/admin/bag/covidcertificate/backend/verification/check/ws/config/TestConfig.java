@@ -34,6 +34,9 @@ public class TestConfig {
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
     private String rulesEndpoint;
 
+    @Value("${verifier.rules.endpoint:/trust/v1/metadata}")
+    private String valueSetsEndpoint;
+
     @Bean
     public VerificationController verificationController(
             TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
@@ -48,6 +51,7 @@ public class TestConfig {
     @Bean
     public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
         return new VerifierHelper(
-                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
+                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint,
+            valueSetsEndpoint);
     }
 }
