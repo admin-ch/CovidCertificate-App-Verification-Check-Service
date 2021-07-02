@@ -10,9 +10,10 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +21,18 @@ import org.springframework.context.annotation.Profile;
 @Profile("test")
 @Configuration
 public class TestConfig {
+
+    @Value("${verifier.baseurl}")
+    private String verifierBaseUrl;
+
+    @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
+    private String dscEndpoint;
+
+    @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
+    private String revocationEndpoint;
+
+    @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
+    private String rulesEndpoint;
 
     @Bean
     public VerificationController verificationController(
@@ -33,7 +46,8 @@ public class TestConfig {
     }
 
     @Bean
-    public VerifierHelper verifierHelper() {
-        return new VerifierHelper();
+    public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
+        return new VerifierHelper(
+                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
     }
 }

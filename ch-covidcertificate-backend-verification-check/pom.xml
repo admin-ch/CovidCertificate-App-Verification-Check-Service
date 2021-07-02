@@ -115,6 +115,23 @@
             <artifactId>doc-annotations</artifactId>
             <version>1.0.4</version>
         </dependency>
+
+        <!--   TestDataGenerator dependencies     -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.moshi</groupId>
+            <artifactId>moshi</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.moshi</groupId>
+            <artifactId>moshi-adapters</artifactId>
+            <version>1.9.2</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

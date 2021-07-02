@@ -11,11 +11,12 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
-import ch.admin.bag.covidcertificate.backend.verification.check.model.TrustListConfig;
-import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.ClientCert;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.LibWrapper;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.ubique.openapi.docannotations.Documentation;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -51,14 +52,21 @@ public class VerificationController {
     }
 
     @PostMapping(path = {"/verify"})
-    public @ResponseBody ResponseEntity<Void> verify(@RequestBody HCertPayload hCertPayload) {
-        // TODO: Decode & Verify hcertpayload
-        List<ClientCert> trustList = trustListConfig.getTrustList();
+    public @ResponseBody ResponseEntity<VerificationResponse> verify(
+            @RequestBody HCertPayload hCertPayload) {
+        // Decode hcert
+        final var dccHolder = LibWrapper.decodeHCert(hCertPayload);
+        // Update trustList
+        var trustList = trustListConfig.getTrustList();
         if (trustList == null) {
-            verifierHelper.getDSCs();
-            verifierHelper.getRevokedCerts();
-            verifierHelper.getNationalRules();
+            verifierHelper.updateTrustListConfig();
         }
-        return ResponseEntity.ok().build();
+        // Verify hcert
+        final var verificationState = LibWrapper.verifyDcc(dccHolder, trustList);
+        // Build response
+        final var verificationResponse = new VerificationResponse();
+        verificationResponse.setHcertDecoded(dccHolder);
+        verificationResponse.setValid(verificationState instanceof VerificationState.SUCCESS);
+        return ResponseEntity.ok(verificationResponse);
     }
 }

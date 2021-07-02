@@ -65,6 +65,17 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
         </dependency>
+
+        <!--    Core SDK    -->
+        <dependency>
+            <groupId>ch.admin.bag.covidcertificate</groupId>
+            <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -101,7 +112,7 @@
                 <version>${spring-boot-version}</version>
                 <configuration>
                     <mainClass>
-<!--                        ch.admin.bag.covidcertificate.backend.transformation.ws.TransformationWS-->
+                        <!--                        ch.admin.bag.covidcertificate.backend.transformation.ws.TransformationWS-->
                     </mainClass>
                 </configuration>
                 <executions>
@@ -130,7 +141,7 @@
                 <configuration>
                     <apiVersion>1.1.0</apiVersion>
                     <basePackages>
-<!--                        ch.admin.bag.covidcertificate.backend.exchange-->
+                        <!--                        ch.admin.bag.covidcertificate.backend.exchange-->
                     </basePackages>
                     <controllers>
                     </controllers>
@@ -162,6 +173,25 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>ch.admin.bag.covidcertificate</groupId>
+                            <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
+                            <version>1.0.1</version>
+                            <packaging>jar</packaging>
+                            <file>${basedir}/../lib/CovidCertificate-SDK-Kotlin-1.0.1.jar</file>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

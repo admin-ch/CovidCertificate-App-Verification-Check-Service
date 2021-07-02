@@ -10,14 +10,28 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public abstract class WsBaseConfig {
+
+    @Value("${verifier.baseurl}")
+    private String verifierBaseUrl;
+
+    // TODO: Modify caching logic to keep eTag and send request to /list endpoint
+    @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
+    private String dscEndpoint;
+
+    @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
+    private String revocationEndpoint;
+
+    @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
+    private String rulesEndpoint;
 
     @Bean
     public VerificationController verificationController(
@@ -31,7 +45,8 @@ public abstract class WsBaseConfig {
     }
 
     @Bean
-    public VerifierHelper verifierHelper() {
-        return new VerifierHelper();
+    public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
+        return new VerifierHelper(
+                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
     }
 }
