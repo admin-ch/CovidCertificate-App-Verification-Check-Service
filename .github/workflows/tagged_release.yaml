@@ -26,7 +26,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TESTCONTAINERS_RYUK_DISABLED: true
       - name: shasum
-        run: shasum -a 256 ch-covidcertificate-backend-verifier/ch-covidcertificate-backend-verification-check-ws/target/ch-covidcertificate-backend-verification-check-ws.jar > ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/target/ch-covidcertificate-backend-verification-check-ws.jar.sha256
+        run: shasum -a 256 ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/target/ch-covidcertificate-backend-verification-check-ws.jar > ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/target/ch-covidcertificate-backend-verification-check-ws.jar.sha256
         shell: bash
       - name: "Create new release"
         uses: marvinpinto/action-automatic-releases@919008cf3f741b179569b7a6fb4d8860689ab7f0
