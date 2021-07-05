@@ -19,6 +19,9 @@ jobs:
           java-version: 11.0.7
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file: :
+      - name: Install local file
+        run: |
+          mvn validate --file ch-covidcertificate-backend-verification-check/pom.xml;
       - name: Build with Maven
         run: |
           mvn clean install --file ch-covidcertificate-backend-verification-check/pom.xml;

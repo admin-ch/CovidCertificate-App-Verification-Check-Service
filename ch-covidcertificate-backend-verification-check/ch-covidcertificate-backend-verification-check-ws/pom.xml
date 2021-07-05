@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>ch-covidcertificate-backend-verification-check</artifactId>
         <groupId>ch.admin.bag.covidcertificate</groupId>
@@ -147,8 +145,7 @@
                     <basePackages>
                         <!--                        ch.admin.bag.covidcertificate.backend.exchange-->
                     </basePackages>
-                    <controllers>
-                    </controllers>
+                    <controllers></controllers>
                     <description>CH Covidcertificate Verification Check API</description>
                     <apiUrls>
                         <apiUrl>https://covidcertificate-app-d.bit.admin.ch</apiUrl>
@@ -183,19 +180,20 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <groupId>ch.admin.bag.covidcertificate</groupId>
+                    <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
+                    <version>1.0.1</version>
+                    <packaging>jar</packaging>
+                    <file>${basedir}/../lib/CovidCertificate-SDK-Kotlin-1.0.1.jar</file>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>initialize</phase>
+                        <id>install-jar-lib</id>
+                        <phase>validate</phase>
                         <goals>
                             <goal>install-file</goal>
                         </goals>
-                        <configuration>
-                            <groupId>ch.admin.bag.covidcertificate</groupId>
-                            <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
-                            <version>1.0.1</version>
-                            <packaging>jar</packaging>
-                            <file>${basedir}/../lib/CovidCertificate-SDK-Kotlin-1.0.1.jar</file>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
