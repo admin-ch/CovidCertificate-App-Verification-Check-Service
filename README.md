@@ -28,6 +28,9 @@ Please note that the app will be available with approved translations in English
 * iOS SDK: [CovidCertificate-SDK-iOS](https://github.com/admin-ch/CovidCertificate-SDK-iOS)
 * Config Service: [CovidCertificate-App-Config-Service](https://github.com/admin-ch/CovidCertificate-App-Config-Service)
 * Verifier Service: [CovidCertificate-App-Verifier-Service](https://github.com/admin-ch/CovidCertificate-App-Verifier-Service)
+* Certificate Delivery: [CovidCertificate-App-Certificate-Delivery](https://github.com/admin-ch/CovidCertificate-App-Certificate-Delivery)
+* Transformation Service: [CovidCertificate-App-Transformation-Service](https://github.com/admin-ch/CovidCertificate-App-Transformation-Service)
+* Verification-Check Service: [CovidCertificate-App-Verification-Check-Service](https://github.com/admin-ch/CovidCertificate-App-Verification-Check-Service)
 
 ## License
 
