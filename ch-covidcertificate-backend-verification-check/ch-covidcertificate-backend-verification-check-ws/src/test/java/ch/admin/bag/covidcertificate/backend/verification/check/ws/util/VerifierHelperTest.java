@@ -36,9 +36,10 @@ class VerifierHelperTest {
                     .registerModule(new KotlinModule());
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
-    private static final String verifierBaseUrl = "http://localhost:8080";
+    private static final String verifierBaseUrl = "verifier.test.ch";
     private static final String dscEndpoint = "/trust/v1/keys/updates";
     private static final String rulesEndpoint = "/trust/v1/verificationRules";
+    private static final String revocationEndpoint = "/trust/v1/revocationList";
     private static Map<String, String> etagMap = new HashMap<>();
 
     @Test
