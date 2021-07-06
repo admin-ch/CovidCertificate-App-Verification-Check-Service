@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes;
+import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.StateError;
@@ -19,9 +20,7 @@ public class LibWrapper {
     }
 
     public static DecodeState decodeHCert(HCertPayload hCertPayload) {
-        // TODO Implement
-        return new DecodeState.ERROR(
-                new StateError(ErrorCodes.GENERAL_OFFLINE, "not implemented", null));
+        return CertificateDecoder.decode(hCertPayload.getHcert());
     }
 
     public static VerificationState verifyDcc(DccHolder dccHolder, TrustList trustList) {

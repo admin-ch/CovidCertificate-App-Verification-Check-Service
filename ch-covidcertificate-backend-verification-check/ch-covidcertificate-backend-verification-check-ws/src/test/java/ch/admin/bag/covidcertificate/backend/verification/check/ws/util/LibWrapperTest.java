@@ -27,13 +27,11 @@ class LibWrapperTest {
             "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOA+I7CGA5I.I554S5.7AT4V22F/8X*G3M9JUPY0BX/KR96R/S09T./0LWTKD33236J3TA3M*4VV2 73-E3GG396B-43O058YIB73A*G3W19UEBY5:PI0EGSP4*2DN43U*0CEBQ/GXQFY73CIBC:G 7376BXBJBAJ UNFMJCRN0H3PQN*E33H3OA70M3FMJIJN523.K5QZ4A+2XEN QT QTHC31M3+E32R44$28A9H0D3ZCL4JMYAZ+S-A5$XKX6T2YC 35H/ITX8GL2-LH/CJTK96L6SR9MU9RFGJA6Q3QR$P2OIC0JVLA8J3ET3:H3A+2+33U SAAUOT3TPTO4UBZIC0JKQTL*QDKBO.AI9BVYTOCFOPS4IJCOT0$89NT2V457U8+9W2KQ-7LF9-DF07U$B97JJ1D7WKP/HLIJLRKF1MFHJP7NVDEBU1J*Z222E.GJ$874 7XTHLSS+%O SC$ZNV+OI7GXCWI+DZJBTQ8PYOR6WZ.VO1T2COOXM/FJBWJK4T97V5GFEIJ.KG9ULH9BKIGBCOJRQPHHA0D$E6% RU40HHS54";
 
     @Test
-    @Disabled("Failing due to missing CORS library dependency in Core-SDK jar")
     void decodeTest() {
+        // TODO: Assert that invalid hcert can't be decoded
         // Test certificate decoding
         var decodeState = CertificateDecoder.decode(HC1_A);
-        assertTrue(
-                decodeState instanceof DecodeState.SUCCESS,
-                "Error code: " + ((DecodeState.ERROR) decodeState).getError().getCode());
+        assertTrue(decodeState instanceof DecodeState.SUCCESS);
         // Test light certificate decoding
         decodeState = CertificateDecoder.decode(LT1_A);
         assertTrue(decodeState instanceof DecodeState.SUCCESS);
