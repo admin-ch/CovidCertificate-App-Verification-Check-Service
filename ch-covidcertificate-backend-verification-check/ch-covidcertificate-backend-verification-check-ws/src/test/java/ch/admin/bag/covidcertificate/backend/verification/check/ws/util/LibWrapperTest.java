@@ -22,9 +22,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier;
 import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,15 +31,25 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Unit test to check the functionality of the decoding + verification pipeline using the core-sdk
  */
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles({"test"})
+@TestPropertySource("classpath:application-test.properties")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class LibWrapperTest {
 
     private static final String HC1_A =
@@ -50,17 +58,12 @@ class LibWrapperTest {
             "LT1:6BFY90R10RDWT 9O60GO0000W50JB06H08CK%QC/70YM8N34GB8FN04BC6S5WY01BC9HH597MTKGVC*JC1A6/Q63W5KF6746TPCBEC7ZKW.CU2DNXO VD5$C JC3/DMP8$ILZEDZ CW.C9WE.Y9AY8+S9VIAI3D8WEVM8:S9C+9$PC5$CUZCY$5Y$527BK/CV3VEAFC48$CS/M8WBD543I 2QRK$G6RXQT-T74F$SCMWJ+*VADUJR1T46 /Q+38HH61HVL-U78GRAKUIOIVTWXG5%JL%Q1SPOF9";
     private static final String hcert =
             "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOA+I7CGA5I.I554S5.7AT4V22F/8X*G3M9JUPY0BX/KR96R/S09T./0LWTKD33236J3TA3M*4VV2 73-E3GG396B-43O058YIB73A*G3W19UEBY5:PI0EGSP4*2DN43U*0CEBQ/GXQFY73CIBC:G 7376BXBJBAJ UNFMJCRN0H3PQN*E33H3OA70M3FMJIJN523.K5QZ4A+2XEN QT QTHC31M3+E32R44$28A9H0D3ZCL4JMYAZ+S-A5$XKX6T2YC 35H/ITX8GL2-LH/CJTK96L6SR9MU9RFGJA6Q3QR$P2OIC0JVLA8J3ET3:H3A+2+33U SAAUOT3TPTO4UBZIC0JKQTL*QDKBO.AI9BVYTOCFOPS4IJCOT0$89NT2V457U8+9W2KQ-7LF9-DF07U$B97JJ1D7WKP/HLIJLRKF1MFHJP7NVDEBU1J*Z222E.GJ$874 7XTHLSS+%O SC$ZNV+OI7GXCWI+DZJBTQ8PYOR6WZ.VO1T2COOXM/FJBWJK4T97V5GFEIJ.KG9ULH9BKIGBCOJRQPHHA0D$E6% RU40HHS54";
-
-    private static final ObjectMapper objectMapper =
-            new ObjectMapper()
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                    .registerModule(new KotlinModule());
     private static final Logger logger = LoggerFactory.getLogger(LibWrapperTest.class);
-
     private static CertificateVerifier certificateVerifier;
+    @Autowired ObjectMapper objectMapper;
 
-    @BeforeAll
-    static void setup() {
+    @BeforeEach
+    void setup() {
         try {
             final var acceptedVaccines =
                     objectMapper.readValue(

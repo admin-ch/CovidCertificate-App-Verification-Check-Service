@@ -27,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class BaseControllerTest {
 
-    @Autowired
-    protected MockMvc mockMvc;
-    protected ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired protected MockMvc mockMvc;
+    @Autowired protected ObjectMapper objectMapper;
 }

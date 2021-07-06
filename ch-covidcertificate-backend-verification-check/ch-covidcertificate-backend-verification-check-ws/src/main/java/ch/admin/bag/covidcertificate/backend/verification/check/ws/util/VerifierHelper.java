@@ -8,9 +8,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificat
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,30 +27,26 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class VerifierHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(VerifierHelper.class);
-    private static final ObjectMapper objectMapper =
-            new ObjectMapper()
-                    // Need this to ignore subjectPublicKeyInfo field in /updates response
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                    .registerModule(new KotlinModule());
     private static final HttpClient httpClient = HttpClient.newHttpClient();
-
     private final TrustListConfig trustListConfig;
     private final String verifierBaseUrl;
     private final String dscEndpoint;
     private final String revocationEndpoint;
     private final String rulesEndpoint;
+    private final ObjectMapper objectMapper;
 
     public VerifierHelper(
-            TrustListConfig trustListConfig,
-            String verifierBaseUrl,
-            String dscEndpoint,
-            String revocationEndpoint,
-            String rulesEndpoint) {
+        TrustListConfig trustListConfig,
+        String verifierBaseUrl,
+        String dscEndpoint,
+        String revocationEndpoint,
+        String rulesEndpoint, ObjectMapper objectMapper) {
         this.trustListConfig = trustListConfig;
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
+        this.objectMapper = objectMapper;
     }
 
     // TODO: How to handle response failures?

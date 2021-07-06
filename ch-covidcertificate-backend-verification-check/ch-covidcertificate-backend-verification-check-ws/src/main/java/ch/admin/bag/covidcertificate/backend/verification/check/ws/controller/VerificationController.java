@@ -19,6 +19,8 @@ import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.ubique.openapi.docannotations.Documentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +77,14 @@ public class VerificationController {
         // Build response
         final var verificationResponse = new VerificationResponse();
         verificationResponse.setHcertDecoded(dccHolder);
-        verificationResponse.setValid(verificationState instanceof VerificationState.SUCCESS);
-        return ResponseEntity.ok(verificationResponse);
+        if (verificationState instanceof VerificationState.SUCCESS) {
+            verificationResponse.setSuccessState((VerificationState.SUCCESS) verificationState);
+        } else if (verificationState instanceof ERROR) {
+            verificationResponse.setErrorState((ERROR) verificationState);
+        } else {
+            verificationResponse.setInvalidState((INVALID) verificationState);
+        }
+        final var response = ResponseEntity.status(200).body(verificationResponse);
+        return response;
     }
 }

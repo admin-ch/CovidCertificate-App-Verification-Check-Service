@@ -13,9 +13,14 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 @Profile("test")
@@ -46,8 +51,24 @@ public class TestConfig {
     }
 
     @Bean
-    public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
+    public VerifierHelper verifierHelper(
+            TrustListConfig trustListConfig, ObjectMapper objectMapper) {
         return new VerifierHelper(
-                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
+                trustListConfig,
+                verifierBaseUrl,
+                dscEndpoint,
+                revocationEndpoint,
+                rulesEndpoint,
+                objectMapper);
+    }
+
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper()
+                // Need this to ignore subjectPublicKeyInfo field in /updates response
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .registerModule(new KotlinModule())
+                .registerModule(new JavaTimeModule());
     }
 }

@@ -1,12 +1,16 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -67,5 +71,9 @@ class VerificationControllerTest extends BaseControllerTest {
                         .andExpect(status().is2xxSuccessful())
                         .andReturn()
                         .getResponse();
+        assertFalse(response.getContentAsString().isEmpty());
+        final var verificationResponse = objectMapper
+            .readValue(response.getContentAsString(), VerificationResponse.class);
+        assertTrue(verificationResponse.getSuccessState() instanceof SUCCESS);
     }
 }
