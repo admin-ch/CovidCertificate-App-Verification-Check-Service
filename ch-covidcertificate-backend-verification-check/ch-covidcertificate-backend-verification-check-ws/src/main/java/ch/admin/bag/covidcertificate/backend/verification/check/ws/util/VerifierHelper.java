@@ -65,7 +65,7 @@ public class VerifierHelper {
             revokedCerts = getRevokedCerts();
             nationalRules = getNationalRules();
         } catch (URISyntaxException | InterruptedException | IOException e) {
-            e.printStackTrace();
+            logger.error("TrustList update failed: {}", e.getMessage());
         }
         if (jwks != null && revokedCerts != null && nationalRules != null) {
             var trustList = new TrustList(jwks, revokedCerts, nationalRules);
