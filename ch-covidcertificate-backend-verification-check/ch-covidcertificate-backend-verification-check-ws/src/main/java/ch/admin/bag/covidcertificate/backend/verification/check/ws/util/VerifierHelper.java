@@ -110,7 +110,7 @@ public class VerifierHelper {
      */
     private RuleSet getNationalRules()
             throws URISyntaxException, IOException, InterruptedException {
-        logger.info("Updating list of revoked certificates");
+        logger.info("Updating national rules");
         final String response = getResponse(rulesEndpoint, new HashMap<>()).body();
         final var intermediateRules = objectMapper.readValue(response, IntermediateRuleSet.class);
         List<Rule> rules = new ArrayList<>();
