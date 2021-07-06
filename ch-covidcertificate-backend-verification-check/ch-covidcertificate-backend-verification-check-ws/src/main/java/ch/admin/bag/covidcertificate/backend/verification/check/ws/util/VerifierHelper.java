@@ -56,7 +56,7 @@ public class VerifierHelper {
     }
 
     // TODO: How to handle response failures?
-    public void updateTrustListConfig() {
+    public void updateTrustListConfig() throws InterruptedException {
         Jwks jwks = null;
         RevokedCertificates revokedCerts = null;
         RuleSet nationalRules = null;
@@ -64,8 +64,11 @@ public class VerifierHelper {
             jwks = getDSCs();
             revokedCerts = getRevokedCerts();
             nationalRules = getNationalRules();
-        } catch (URISyntaxException | InterruptedException | IOException e) {
+        } catch (URISyntaxException | IOException e) {
             logger.error("TrustList update failed: {}", e.getMessage());
+        } catch (InterruptedException e) {
+            logger.error("TrustList update failed: {}", e.getMessage());
+            throw e;
         }
         if (jwks != null && revokedCerts != null && nationalRules != null) {
             var trustList = new TrustList(jwks, revokedCerts, nationalRules);

@@ -56,7 +56,7 @@ public class VerificationController {
 
     @PostMapping(path = {"/verify"})
     public @ResponseBody ResponseEntity<VerificationResponse> verify(
-            @RequestBody HCertPayload hCertPayload) {
+            @RequestBody HCertPayload hCertPayload) throws InterruptedException {
         // Decode hcert
         final var decodeState = LibWrapper.decodeHCert(hCertPayload);
         DccHolder dccHolder;

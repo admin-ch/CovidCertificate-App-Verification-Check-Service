@@ -16,7 +16,7 @@ public class SchedulingConfig {
     }
 
     @Scheduled(cron = "${trustlist.cron}")
-    public void updateTrustList() {
+    public void updateTrustList() throws InterruptedException {
         verifierHelper.updateTrustListConfig();
     }
 }
