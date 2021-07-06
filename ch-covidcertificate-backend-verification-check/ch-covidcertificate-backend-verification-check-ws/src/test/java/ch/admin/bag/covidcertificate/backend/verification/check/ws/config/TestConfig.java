@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class TestConfig {
 
-    @Value("${verifier.baseurl:http://localhost:8080}")
+    @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
 
     @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
