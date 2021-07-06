@@ -1,9 +1,10 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RulesResponse;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,23 +116,36 @@ public class VerifierHelper {
      * @return RuleSet object as required by the SDK-core
      */
     private RuleSet getNationalRules() {
-        logger.info("Updating list of verification rules");
-        var rules = new RulesResponse();
+        logger.info("Updating list of revoked certificates");
         try {
             final String response = getResponse(rulesEndpoint, new HashMap<>());
             if (response.isBlank()) {
                 logger.info("ETag hasn't changed - No need to update");
-                rules.setRules(trustListConfig.getTrustList().getRuleSet().getRules());
+                return trustListConfig.getTrustList().getRuleSet();
             } else {
-                rules = objectMapper.readValue(response, RulesResponse.class);
+                final var intermediateRules =
+                        objectMapper.readValue(response, IntermediateRuleSet.class);
+                List<Rule> rules = new ArrayList<>();
+                for (var rule : intermediateRules.getRules()) {
+                    rules.add(
+                            new Rule(
+                                    rule.getId(),
+                                    rule.getBusinessDescription(),
+                                    rule.getDescription(),
+                                    rule.getInputParameter(),
+                                    rule.getLogic()));
+                }
+                return new RuleSet(
+                        rules,
+                        intermediateRules.getValueSets(),
+                        intermediateRules.getValidDuration());
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
             logger.error(
                     "An error occurred while downloading the list of verification rules: {}",
                     e.getMessage());
+            return new RuleSet(new ArrayList<>(), null, 0);
         }
-        // TODO Get ValueSets from Verifier-Service
-        return new RuleSet(rules.getRules(), null, 0);
     }
 
     private String getResponse(String endpoint, Map<String, String> params)

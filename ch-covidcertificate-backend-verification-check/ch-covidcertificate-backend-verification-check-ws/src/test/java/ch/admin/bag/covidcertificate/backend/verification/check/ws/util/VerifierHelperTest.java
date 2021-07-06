@@ -2,21 +2,22 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RulesResponse;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi.Builder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import org.hibernate.validator.internal.IgnoreForbiddenApisErrors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -57,8 +58,21 @@ class VerifierHelperTest {
         if (response.isBlank()) {
             logger.info("ETag hasn't changed - No need to update");
         } else {
-            final var rules = objectMapper.readValue(response, RulesResponse.class);
+            final var rules = objectMapper.readValue(response, IntermediateRuleSet.class);
             assertNotNull(rules);
+            List<Rule> rulesList = new ArrayList<>();
+            for (var rule : rules.getRules()) {
+                rulesList.add(
+                        new Rule(
+                                rule.getId(),
+                                rule.getBusinessDescription(),
+                                rule.getDescription(),
+                                rule.getInputParameter(),
+                                rule.getLogic()));
+            }
+            final var ruleSet =
+                    new RuleSet(rulesList, rules.getValueSets(), rules.getValidDuration());
+            assertNotNull(ruleSet);
         }
     }
 
