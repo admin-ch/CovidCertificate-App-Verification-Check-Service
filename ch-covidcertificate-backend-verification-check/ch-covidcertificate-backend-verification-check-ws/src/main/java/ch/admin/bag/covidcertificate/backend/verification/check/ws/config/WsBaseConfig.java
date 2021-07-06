@@ -23,7 +23,6 @@ public abstract class WsBaseConfig {
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
 
-    // TODO: Modify caching logic to keep eTag and send request to /list endpoint
     @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
     private String dscEndpoint;
 
@@ -32,9 +31,6 @@ public abstract class WsBaseConfig {
 
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
     private String rulesEndpoint;
-
-    @Value("${verifier.rules.endpoint:/trust/v1/metadata}")
-    private String valueSetsEndpoint;
 
     @Bean
     public VerificationController verificationController(
@@ -50,11 +46,6 @@ public abstract class WsBaseConfig {
     @Bean
     public VerifierHelper verifierHelper(TrustListConfig trustListConfig) {
         return new VerifierHelper(
-                trustListConfig,
-                verifierBaseUrl,
-                dscEndpoint,
-                revocationEndpoint,
-                rulesEndpoint,
-                valueSetsEndpoint);
+                trustListConfig, verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
     }
 }

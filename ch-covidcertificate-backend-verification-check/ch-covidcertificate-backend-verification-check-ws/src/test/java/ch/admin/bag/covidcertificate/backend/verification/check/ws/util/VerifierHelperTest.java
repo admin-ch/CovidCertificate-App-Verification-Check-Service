@@ -6,6 +6,7 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.Interme
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +30,10 @@ class VerifierHelperTest {
 
     private static final Logger logger = LoggerFactory.getLogger(VerifierHelperTest.class);
     private static final ObjectMapper objectMapper =
-            new ObjectMapper().registerModule(new KotlinModule());
+            new ObjectMapper()
+                    // Need this to ignore subjectPublicKeyInfo field in /updates response
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    .registerModule(new KotlinModule());
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
     private static final String verifierBaseUrl = "http://localhost:8080";
@@ -42,19 +47,22 @@ class VerifierHelperTest {
         logger.info("Updating list of DSCs");
         final var params = new HashMap<String, String>();
         params.put("certFormat", "ANDROID");
-        String response = getResponse(dscEndpoint, params);
-        if (response.isEmpty()) {
-            logger.info("ETag hasn't changed - No need to update");
-        } else {
-            final var jwks = objectMapper.readValue(response, Jwks.class);
+        Jwks jwks;
+        HttpResponse<String> response;
+        do {
+            logger.info("Sending request to Verifier Service");
+            response = getResponse(dscEndpoint, params);
+            jwks = objectMapper.readValue(response.body(), Jwks.class);
             assertNotNull(jwks);
-        }
+            final var nextSince = response.headers().firstValue("X-Next-Since");
+            nextSince.ifPresent(next -> params.put("since", next));
+        } while (response.headers().firstValue("up-to-date").isEmpty());
     }
 
     @Test
     @Disabled("Need to mock Verifier Service endpoint")
     void getRulesTest() throws URISyntaxException, IOException, InterruptedException {
-        final String response = getResponse(rulesEndpoint, new HashMap<>());
+        final String response = getResponse(rulesEndpoint, new HashMap<>()).body();
         if (response.isBlank()) {
             logger.info("ETag hasn't changed - No need to update");
         } else {
@@ -76,7 +84,7 @@ class VerifierHelperTest {
         }
     }
 
-    private String getResponse(String endpoint, Map<String, String> params)
+    private HttpResponse<String> getResponse(String endpoint, Map<String, String> params)
             throws URISyntaxException, IOException, InterruptedException {
         final var strings = verifierBaseUrl.split("://");
         final var builder =
@@ -88,19 +96,7 @@ class VerifierHelperTest {
             builder.queryParam(entry.getKey(), entry.getValue());
         }
         final var uri = builder.build().toUriString();
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(new URI(uri))
-                        .GET()
-                        .header("ETag", etagMap.getOrDefault(endpoint, ""))
-                        .build();
-        final var response = httpClient.send(request, BodyHandlers.ofString());
-        if (response.statusCode() == 304) {
-            return "";
-        } else {
-            final var eTag = response.headers().firstValue("ETag");
-            eTag.ifPresent(tag -> etagMap.put(endpoint, tag));
-            return response.body();
-        }
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(uri)).GET().build();
+        return httpClient.send(request, BodyHandlers.ofString());
     }
 }

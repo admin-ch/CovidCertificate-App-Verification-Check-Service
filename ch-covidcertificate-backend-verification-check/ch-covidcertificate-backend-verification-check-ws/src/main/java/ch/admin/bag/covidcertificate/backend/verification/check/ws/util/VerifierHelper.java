@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
@@ -14,6 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,31 +37,36 @@ public class VerifierHelper {
     private final String dscEndpoint;
     private final String revocationEndpoint;
     private final String rulesEndpoint;
-    private final String valueSetsEndpoint;
-
-    private final Map<String, String> etagMap = new HashMap<>();
 
     public VerifierHelper(
-            TrustListConfig trustListConfig,
-            String verifierBaseUrl,
-            String dscEndpoint,
-            String revocationEndpoint,
-            String rulesEndpoint,
-            String valueSetsEndpoint) {
+        TrustListConfig trustListConfig,
+        String verifierBaseUrl,
+        String dscEndpoint,
+        String revocationEndpoint,
+        String rulesEndpoint) {
         this.trustListConfig = trustListConfig;
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
-        this.valueSetsEndpoint = valueSetsEndpoint;
     }
 
+    // TODO: How to handle response failures?
     public void updateTrustListConfig() {
-        final var jwks = getDSCs();
-        final var revokedCerts = getRevokedCerts();
-        final var nationalRules = getNationalRules();
-        var trustList = new TrustList(jwks, revokedCerts, nationalRules);
-        trustListConfig.setTrustList(trustList);
+        Jwks jwks = null;
+        RevokedCertificates revokedCerts = null;
+        RuleSet nationalRules = null;
+        try {
+            jwks = getDSCs();
+            revokedCerts = getRevokedCerts();
+            nationalRules = getNationalRules();
+        } catch (URISyntaxException | InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+        if (jwks != null && revokedCerts != null && nationalRules != null) {
+            var trustList = new TrustList(jwks, revokedCerts, nationalRules);
+            trustListConfig.setTrustList(trustList);
+        }
     }
 
     /**
@@ -67,23 +74,19 @@ public class VerifierHelper {
      *
      * @return a JWKs object as required by the SDK-core mapped from a list of ClientCerts
      */
-    private Jwks getDSCs() {
+    private Jwks getDSCs() throws URISyntaxException, IOException, InterruptedException {
         logger.info("Updating list of DSCs");
         final var params = new HashMap<String, String>();
         params.put("certFormat", "ANDROID");
-        try {
-            String response = getResponse(dscEndpoint, params);
-            if (response.isBlank()) {
-                logger.info("ETag hasn't changed - No need to update");
-                return trustListConfig.getTrustList().getSignatures();
-            } else {
-                return objectMapper.readValue(response, Jwks.class);
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            logger.error(
-                    "An error occurred while downloading the list of DSCs: {}", e.getMessage());
-            return new Jwks(new ArrayList<>());
-        }
+        List<Jwk> jwkList = new ArrayList<>();
+        HttpResponse<String> response;
+        do {
+            response = getResponse(dscEndpoint, params);
+            jwkList.addAll(objectMapper.readValue(response.body(), Jwks.class).getCerts());
+            final var nextSince = response.headers().firstValue("X-Next-Since");
+            nextSince.ifPresent(next -> params.put("since", next));
+        } while (response.headers().firstValue("up-to-date").isEmpty());
+        return new Jwks(jwkList);
     }
 
     /**
@@ -92,22 +95,11 @@ public class VerifierHelper {
      *
      * @return RevokedCertificates object as required by the SDK-core
      */
-    private RevokedCertificates getRevokedCerts() {
+    private RevokedCertificates getRevokedCerts()
+            throws URISyntaxException, IOException, InterruptedException {
         logger.info("Updating list of revoked certificates");
-        try {
-            final String response = getResponse(revocationEndpoint, new HashMap<>());
-            if (response.isBlank()) {
-                logger.info("ETag hasn't changed - No need to update");
-                return trustListConfig.getTrustList().getRevokedCertificates();
-            } else {
-                return objectMapper.readValue(response, RevokedCertificates.class);
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            logger.error(
-                    "An error occurred while downloading the list of revoked certificates: {}",
-                    e.getMessage());
-            return new RevokedCertificates(new ArrayList<>(), 0);
-        }
+        final String response = getResponse(revocationEndpoint, new HashMap<>()).body();
+        return objectMapper.readValue(response, RevokedCertificates.class);
     }
 
     /**
@@ -115,64 +107,38 @@ public class VerifierHelper {
      *
      * @return RuleSet object as required by the SDK-core
      */
-    private RuleSet getNationalRules() {
+    private RuleSet getNationalRules()
+            throws URISyntaxException, IOException, InterruptedException {
         logger.info("Updating list of revoked certificates");
-        try {
-            final String response = getResponse(rulesEndpoint, new HashMap<>());
-            if (response.isBlank()) {
-                logger.info("ETag hasn't changed - No need to update");
-                return trustListConfig.getTrustList().getRuleSet();
-            } else {
-                final var intermediateRules =
-                        objectMapper.readValue(response, IntermediateRuleSet.class);
-                List<Rule> rules = new ArrayList<>();
-                for (var rule : intermediateRules.getRules()) {
-                    rules.add(
-                            new Rule(
-                                    rule.getId(),
-                                    rule.getBusinessDescription(),
-                                    rule.getDescription(),
-                                    rule.getInputParameter(),
-                                    rule.getLogic()));
-                }
-                return new RuleSet(
-                        rules,
-                        intermediateRules.getValueSets(),
-                        intermediateRules.getValidDuration());
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            logger.error(
-                    "An error occurred while downloading the list of verification rules: {}",
-                    e.getMessage());
-            return new RuleSet(new ArrayList<>(), null, 0);
+        final String response = getResponse(rulesEndpoint, new HashMap<>()).body();
+        final var intermediateRules = objectMapper.readValue(response, IntermediateRuleSet.class);
+        List<Rule> rules = new ArrayList<>();
+        for (var rule : intermediateRules.getRules()) {
+            rules.add(
+                    new Rule(
+                            rule.getId(),
+                            rule.getBusinessDescription(),
+                            rule.getDescription(),
+                            rule.getInputParameter(),
+                            rule.getLogic()));
         }
+        return new RuleSet(
+                rules, intermediateRules.getValueSets(), intermediateRules.getValidDuration());
     }
 
-    private String getResponse(String endpoint, Map<String, String> params)
+    private HttpResponse<String> getResponse(String endpoint, Map<String, String> params)
             throws URISyntaxException, IOException, InterruptedException {
-        final var strings = verifierBaseUrl.split("://");
+        final var urlStrings = verifierBaseUrl.split("://");
         final var builder =
                 UriComponentsBuilder.newInstance()
-                        .scheme(strings[0])
-                        .host(strings[1])
+                        .scheme(urlStrings[0])
+                        .host(urlStrings[1])
                         .path(endpoint);
         for (var entry : params.entrySet()) {
             builder.queryParam(entry.getKey(), entry.getValue());
         }
         final var uri = builder.build().toUriString();
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(new URI(uri))
-                        .GET()
-                        .header("ETag", etagMap.getOrDefault(endpoint, ""))
-                        .build();
-        final var response = httpClient.send(request, BodyHandlers.ofString());
-        if (response.statusCode() == 304) {
-            return "";
-        } else {
-            final var eTag = response.headers().firstValue("ETag");
-            eTag.ifPresent(tag -> etagMap.put(endpoint, tag));
-            return response.body();
-        }
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(uri)).GET().build();
+        return httpClient.send(request, BodyHandlers.ofString());
     }
 }
