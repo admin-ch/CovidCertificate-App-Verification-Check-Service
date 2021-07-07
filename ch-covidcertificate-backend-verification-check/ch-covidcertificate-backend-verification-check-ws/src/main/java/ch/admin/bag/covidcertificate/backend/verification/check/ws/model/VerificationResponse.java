@@ -33,8 +33,7 @@ public class VerificationResponse {
         return errorState;
     }
 
-    public void setErrorState(
-        ERROR errorState) {
+    public void setErrorState(ERROR errorState) {
         this.errorState = errorState;
     }
 
@@ -42,8 +41,7 @@ public class VerificationResponse {
         return invalidState;
     }
 
-    public void setInvalidState(
-        INVALID invalidState) {
+    public void setInvalidState(INVALID invalidState) {
         this.invalidState = invalidState;
     }
 }

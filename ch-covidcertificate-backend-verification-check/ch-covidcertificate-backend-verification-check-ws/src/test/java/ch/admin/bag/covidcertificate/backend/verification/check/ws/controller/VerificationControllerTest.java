@@ -72,8 +72,8 @@ class VerificationControllerTest extends BaseControllerTest {
                         .andReturn()
                         .getResponse();
         assertFalse(response.getContentAsString().isEmpty());
-        final var verificationResponse = objectMapper
-            .readValue(response.getContentAsString(), VerificationResponse.class);
+        final var verificationResponse =
+                objectMapper.readValue(response.getContentAsString(), VerificationResponse.class);
         assertTrue(verificationResponse.getSuccessState() instanceof SUCCESS);
     }
 }

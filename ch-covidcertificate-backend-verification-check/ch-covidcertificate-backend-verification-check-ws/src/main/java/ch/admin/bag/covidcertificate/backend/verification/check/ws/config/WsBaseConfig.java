@@ -10,19 +10,23 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public abstract class WsBaseConfig {
+public abstract class WsBaseConfig implements WebMvcConfigurer {
 
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
@@ -37,34 +41,26 @@ public abstract class WsBaseConfig {
     private String rulesEndpoint;
 
     @Bean
-    public VerificationController verificationController(
-            TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
-        return new VerificationController(trustListConfig, verifierHelper);
+    public VerificationController verificationController(VerificationService verificationService) {
+        return new VerificationController(verificationService);
     }
 
     @Bean
-    public TrustListConfig trustListConfig() {
-        return new TrustListConfig();
+    public VerificationService verificationService() {
+        return new VerificationService(
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
     }
 
-    @Bean
-    public VerifierHelper verifierHelper(
-            TrustListConfig trustListConfig, ObjectMapper objectMapper) {
-        return new VerifierHelper(
-                trustListConfig,
-                verifierBaseUrl,
-                dscEndpoint,
-                revocationEndpoint,
-                rulesEndpoint,
-                objectMapper);
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper()
-                // Need this to ignore subjectPublicKeyInfo field in /updates response
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new KotlinModule())
-                .registerModule(new JavaTimeModule());
+    @Override
+    public void configureMessageConverters(final List<HttpMessageConverter<?>> converters) {
+        ObjectMapper objectMapper =
+                new ObjectMapper()
+                        // Needed to ignore `subjectPublicKeyInfo` field in /updates response
+                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                        .registerModule(new KotlinModule())
+                        .registerModule(new JavaTimeModule())
+                        .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
+        converters.add(new MappingJackson2HttpMessageConverter(objectMapper));
+        WebMvcConfigurer.super.configureMessageConverters(converters);
     }
 }

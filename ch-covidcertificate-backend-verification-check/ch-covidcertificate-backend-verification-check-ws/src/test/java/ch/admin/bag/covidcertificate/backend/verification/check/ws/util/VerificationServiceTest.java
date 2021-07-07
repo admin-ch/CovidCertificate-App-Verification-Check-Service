@@ -34,9 +34,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @ActiveProfiles({"test"})
 @TestPropertySource("classpath:application-test.properties")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class VerifierHelperTest {
+class VerificationServiceTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(VerifierHelperTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(VerificationServiceTest.class);
     private static final HttpClient httpClient = HttpClient.newHttpClient();
     private static final String verifierBaseUrl = "verifier.test.ch";
     private static final String dscEndpoint = "/trust/v1/keys/updates";

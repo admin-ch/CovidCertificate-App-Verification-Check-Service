@@ -23,14 +23,14 @@ public class BaseSecurity extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
-            .csrf()
-            .disable()
-            .cors()
-            .and()
-            .authorizeRequests()
-            .antMatchers("/v1/verify", "/v1/verify/**")
-            .permitAll();
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .csrf()
+                .disable()
+                .cors()
+                .and()
+                .authorizeRequests()
+                .antMatchers("/v1/verify", "/v1/verify/**")
+                .permitAll();
     }
 }

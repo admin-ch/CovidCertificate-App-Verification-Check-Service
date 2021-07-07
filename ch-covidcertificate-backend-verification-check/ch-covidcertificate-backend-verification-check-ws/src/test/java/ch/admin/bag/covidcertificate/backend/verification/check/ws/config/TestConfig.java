@@ -10,9 +10,9 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -40,9 +40,8 @@ public class TestConfig {
     private String rulesEndpoint;
 
     @Bean
-    public VerificationController verificationController(
-            TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
-        return new VerificationController(trustListConfig, verifierHelper);
+    public VerificationController verificationController(VerificationService verificationService) {
+        return new VerificationController(verificationService);
     }
 
     @Bean
@@ -51,15 +50,9 @@ public class TestConfig {
     }
 
     @Bean
-    public VerifierHelper verifierHelper(
-            TrustListConfig trustListConfig, ObjectMapper objectMapper) {
-        return new VerifierHelper(
-                trustListConfig,
-                verifierBaseUrl,
-                dscEndpoint,
-                revocationEndpoint,
-                rulesEndpoint,
-                objectMapper);
+    public VerificationService verificationService() {
+        return new VerificationService(
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
     }
 
     @Bean

@@ -11,10 +11,8 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.LibWrapper;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.util.VerifierHelper;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
@@ -39,12 +37,10 @@ public class VerificationController {
 
     private static final Logger logger = LoggerFactory.getLogger(VerificationController.class);
 
-    private final TrustListConfig trustListConfig;
-    private final VerifierHelper verifierHelper;
+    private final VerificationService verificationService;
 
-    public VerificationController(TrustListConfig trustListConfig, VerifierHelper verifierHelper) {
-        this.trustListConfig = trustListConfig;
-        this.verifierHelper = verifierHelper;
+    public VerificationController(VerificationService verificationService) {
+        this.verificationService = verificationService;
     }
 
     @Documentation(
@@ -60,20 +56,17 @@ public class VerificationController {
     public @ResponseBody ResponseEntity<VerificationResponse> verify(
             @RequestBody HCertPayload hCertPayload) throws InterruptedException {
         // Decode hcert
-        final var decodeState = LibWrapper.decodeHCert(hCertPayload);
+        final var decodeState = verificationService.decodeHCert(hCertPayload);
         DccHolder dccHolder;
         if (decodeState instanceof DecodeState.SUCCESS) {
             dccHolder = ((SUCCESS) decodeState).getDccHolder();
         } else {
             return ResponseEntity.badRequest().build();
         }
-        // Get trustList, update if necessary
-        var trustList = trustListConfig.getTrustList();
-        if (trustList == null) {
-            verifierHelper.updateTrustListConfig();
-        }
+
         // Verify hcert
-        final var verificationState = LibWrapper.verifyDcc(dccHolder, trustList);
+        final var verificationState = verificationService.verifyDcc(dccHolder);
+
         // Build response
         final var verificationResponse = new VerificationResponse();
         verificationResponse.setHcertDecoded(dccHolder);
@@ -84,7 +77,6 @@ public class VerificationController {
         } else {
             verificationResponse.setInvalidState((INVALID) verificationState);
         }
-        final var response = ResponseEntity.status(200).body(verificationResponse);
-        return response;
+        return ResponseEntity.status(200).body(verificationResponse);
     }
 }
