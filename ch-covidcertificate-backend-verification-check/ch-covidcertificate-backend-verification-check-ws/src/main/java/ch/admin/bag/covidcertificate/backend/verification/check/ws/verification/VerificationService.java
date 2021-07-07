@@ -240,11 +240,11 @@ public class VerificationService {
 
     private RequestEntity<Void> getRequestEntity(String endpoint, Map<String, String> params)
             throws URISyntaxException {
-        final var urlStrings = verifierBaseUrl.split("://");
+        URI uri = new URI(verifierBaseUrl);
         final var builder =
                 UriComponentsBuilder.newInstance()
-                        .scheme(urlStrings[0])
-                        .host(urlStrings[1])
+                        .scheme(uri.getScheme())
+                        .host(uri.getHost())
                         .path(endpoint);
         for (var entry : params.entrySet()) {
             builder.queryParam(entry.getKey(), entry.getValue());
