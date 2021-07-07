@@ -1,6 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;

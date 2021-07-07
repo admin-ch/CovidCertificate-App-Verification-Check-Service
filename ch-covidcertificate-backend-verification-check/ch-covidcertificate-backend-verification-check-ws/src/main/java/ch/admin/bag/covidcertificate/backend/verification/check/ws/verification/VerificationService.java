@@ -1,10 +1,9 @@
-package ch.admin.bag.covidcertificate.backend.verification.check.ws;
+package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerifyWrapper;
 import ch.admin.bag.covidcertificate.sdk.core.data.AcceptedVaccineProvider;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;

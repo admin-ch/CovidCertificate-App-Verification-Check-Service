@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;

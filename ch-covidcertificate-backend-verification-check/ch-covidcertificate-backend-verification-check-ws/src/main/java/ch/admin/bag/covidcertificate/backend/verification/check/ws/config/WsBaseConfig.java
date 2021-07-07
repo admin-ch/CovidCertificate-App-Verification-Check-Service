@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.VerificationService;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.controller.VerificationController;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
