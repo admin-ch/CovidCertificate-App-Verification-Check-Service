@@ -52,7 +52,7 @@ public class TestConfig {
     @Bean
     public VerificationService verificationService() {
         return new VerificationService(
-                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, "none");
     }
 
     @Bean

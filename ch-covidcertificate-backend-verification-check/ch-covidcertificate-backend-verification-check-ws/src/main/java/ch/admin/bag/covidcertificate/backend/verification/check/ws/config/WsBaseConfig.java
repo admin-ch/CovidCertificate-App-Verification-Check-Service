@@ -40,6 +40,9 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
     private String rulesEndpoint;
 
+    @Value("${verifier.api-key:}")
+    private String apiKey;
+
     @Bean
     public VerificationController verificationController(VerificationService verificationService) {
         return new VerificationController(verificationService);
@@ -48,7 +51,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     @Bean
     public VerificationService verificationService() {
         return new VerificationService(
-                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint);
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, apiKey);
     }
 
     @Override

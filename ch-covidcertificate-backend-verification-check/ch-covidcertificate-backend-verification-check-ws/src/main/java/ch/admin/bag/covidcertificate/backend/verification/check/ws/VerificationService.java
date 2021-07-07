@@ -45,6 +45,7 @@ public class VerificationService {
     private final String dscEndpoint;
     private final String revocationEndpoint;
     private final String rulesEndpoint;
+    private final String apiKey;
     private final RestTemplate rt = new RestTemplate();
     private final TrustListConfig trustListConfig = new TrustListConfig();
 
@@ -52,11 +53,13 @@ public class VerificationService {
             String verifierBaseUrl,
             String dscEndpoint,
             String revocationEndpoint,
-            String rulesEndpoint) {
+            String rulesEndpoint,
+            String apiKey) {
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
+        this.apiKey = apiKey;
         updateTrustListConfig();
     }
 
@@ -164,6 +167,7 @@ public class VerificationService {
     private HttpHeaders createHeaders() {
         var headers = new HttpHeaders();
         headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
         return headers;
     }
 
