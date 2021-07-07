@@ -3,6 +3,8 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.TestData;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerifyWrapper;
 import ch.admin.bag.covidcertificate.sdk.core.data.AcceptanceCriteriasConstants;
 import ch.admin.bag.covidcertificate.sdk.core.data.AcceptedVaccineProvider;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;

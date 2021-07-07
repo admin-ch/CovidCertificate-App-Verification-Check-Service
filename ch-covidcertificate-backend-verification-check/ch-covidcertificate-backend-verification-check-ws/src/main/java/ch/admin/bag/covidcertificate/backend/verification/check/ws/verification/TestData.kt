@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.backend.verification.check.ws.util
+package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.*
 

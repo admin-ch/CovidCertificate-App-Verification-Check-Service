@@ -50,9 +50,9 @@ public class TestConfig {
     }
 
     @Bean
-    public VerificationService verificationService() {
+    public VerificationService verificationService(ObjectMapper objectMapper) {
         return new VerificationService(
-                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, "none");
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, "none", objectMapper);
     }
 
     @Bean

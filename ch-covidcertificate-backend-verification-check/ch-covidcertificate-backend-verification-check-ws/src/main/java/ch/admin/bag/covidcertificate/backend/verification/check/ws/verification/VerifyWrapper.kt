@@ -1,4 +1,4 @@
-package ch.admin.bag.covidcertificate.backend.verification.check.ws.util
+package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState

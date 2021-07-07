@@ -49,13 +49,24 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public VerificationService verificationService() {
+    public VerificationService verificationService(ObjectMapper objectMapper) {
         return new VerificationService(
-                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, apiKey);
+                verifierBaseUrl,
+                dscEndpoint,
+                revocationEndpoint,
+                rulesEndpoint,
+                apiKey,
+                objectMapper);
     }
 
     @Override
     public void configureMessageConverters(final List<HttpMessageConverter<?>> converters) {
+        converters.add(new MappingJackson2HttpMessageConverter(objectMapper()));
+        WebMvcConfigurer.super.configureMessageConverters(converters);
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
         ObjectMapper objectMapper =
                 new ObjectMapper()
                         // Needed to ignore `subjectPublicKeyInfo` field in /updates response
@@ -63,7 +74,6 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
                         .registerModule(new KotlinModule())
                         .registerModule(new JavaTimeModule())
                         .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
-        converters.add(new MappingJackson2HttpMessageConverter(objectMapper));
-        WebMvcConfigurer.super.configureMessageConverters(converters);
+        return objectMapper;
     }
 }

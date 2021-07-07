@@ -4,28 +4,37 @@ import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPaylo
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerifyWrapper;
+import ch.admin.bag.covidcertificate.sdk.core.data.AcceptedVaccineProvider;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.VaccinationEntry;
+import ch.admin.bag.covidcertificate.sdk.core.models.products.AcceptedVaccine;
+import ch.admin.bag.covidcertificate.sdk.core.models.products.Vaccine;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
-import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
-import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.ValidityRange;
+import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier;
+import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -48,19 +57,101 @@ public class VerificationService {
     private final String apiKey;
     private final RestTemplate rt = new RestTemplate();
     private final TrustListConfig trustListConfig = new TrustListConfig();
+    private final ObjectMapper objectMapper;
+    private CertificateVerifier certificateVerifier;
 
     public VerificationService(
             String verifierBaseUrl,
             String dscEndpoint,
             String revocationEndpoint,
             String rulesEndpoint,
-            String apiKey) {
+            String apiKey,
+            ObjectMapper objectMapper) {
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
         this.apiKey = apiKey;
+        this.objectMapper = objectMapper;
+        initCertificateVerifier();
         updateTrustListConfig();
+    }
+
+    public void initCertificateVerifier() {
+        try {
+            final var acceptedVaccines =
+                    this.objectMapper.readValue(
+                            new ClassPathResource("acceptedCHVaccine.json").getFile(),
+                            AcceptedVaccine.class);
+            final var acceptedVaccineProvider =
+                    new AcceptedVaccineProvider() {
+
+                        @NotNull
+                        @Override
+                        public String getVaccineName(@NotNull VaccinationEntry vaccinationEntry) {
+                            final var matchingVaccine =
+                                    acceptedVaccines.getEntries().stream()
+                                            .filter(
+                                                    vaccine ->
+                                                            vaccine.getCode()
+                                                                    .equals(
+                                                                            vaccinationEntry
+                                                                                    .getMedicinialProduct()))
+                                            .findFirst();
+                            return matchingVaccine.map(Vaccine::getName).orElse("");
+                        }
+
+                        @NotNull
+                        @Override
+                        public String getProphylaxis(@NotNull VaccinationEntry vaccinationEntry) {
+                            final var matchingVaccine =
+                                    acceptedVaccines.getEntries().stream()
+                                            .filter(
+                                                    vaccine ->
+                                                            vaccine.getCode()
+                                                                    .equals(
+                                                                            vaccinationEntry
+                                                                                    .getMedicinialProduct()))
+                                            .findFirst();
+                            return matchingVaccine.map(Vaccine::getProphylaxis).orElse("");
+                        }
+
+                        @NotNull
+                        @Override
+                        public String getAuthHolder(@NotNull VaccinationEntry vaccinationEntry) {
+                            final var matchingVaccine =
+                                    acceptedVaccines.getEntries().stream()
+                                            .filter(
+                                                    vaccine ->
+                                                            vaccine.getCode()
+                                                                    .equals(
+                                                                            vaccinationEntry
+                                                                                    .getMedicinialProduct()))
+                                            .findFirst();
+                            return matchingVaccine.map(Vaccine::getAuth_holder).orElse("");
+                        }
+
+                        @Nullable
+                        @Override
+                        public Vaccine getVaccineDataFromList(
+                                @NotNull VaccinationEntry vaccinationEntry) {
+                            final var matchingVaccine =
+                                    acceptedVaccines.getEntries().stream()
+                                            .filter(
+                                                    vaccine ->
+                                                            vaccine.getCode()
+                                                                    .equals(
+                                                                            vaccinationEntry
+                                                                                    .getMedicinialProduct()))
+                                            .findFirst();
+                            return matchingVaccine.orElse(null);
+                        }
+                    };
+            final var nationalRulesVerifier = new NationalRulesVerifier(acceptedVaccineProvider);
+            certificateVerifier = new CertificateVerifier(nationalRulesVerifier);
+        } catch (IOException e) {
+            logger.error("Couldn't load accepted vaccine data from json: {}", e.getMessage());
+        }
     }
 
     public void updateTrustListConfig() {
@@ -176,8 +267,6 @@ public class VerificationService {
     }
 
     public VerificationState verifyDcc(DccHolder dccHolder) {
-        // TODO Implement
-        return new SUCCESS(
-                new ValidityRange(LocalDateTime.now(), LocalDateTime.now().plusHours(1)));
+        return VerifyWrapper.verify(certificateVerifier, dccHolder, trustListConfig.getTrustList());
     }
 }
