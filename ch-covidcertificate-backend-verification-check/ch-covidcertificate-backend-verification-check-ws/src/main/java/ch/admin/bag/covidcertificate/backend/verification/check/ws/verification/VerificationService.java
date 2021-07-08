@@ -245,6 +245,7 @@ public class VerificationService {
                 UriComponentsBuilder.newInstance()
                         .scheme(uri.getScheme())
                         .host(uri.getHost())
+                        .port(uri.getPort())
                         .path(endpoint);
         for (var entry : params.entrySet()) {
             builder.queryParam(entry.getKey(), entry.getValue());
