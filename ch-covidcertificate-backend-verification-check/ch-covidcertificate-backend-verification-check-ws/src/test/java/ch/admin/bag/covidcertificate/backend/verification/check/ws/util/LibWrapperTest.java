@@ -12,6 +12,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesSta
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
@@ -60,7 +61,7 @@ class LibWrapperTest {
         assertTrue(decodeState instanceof DecodeState.SUCCESS);
         // Test light certificate decoding
         decodeState = CertificateDecoder.decode(LT1_A);
-        assertTrue(decodeState instanceof DecodeState.SUCCESS);
+        assertTrue(decodeState instanceof DecodeState.ERROR);
     }
 
     @Test
@@ -96,7 +97,7 @@ class LibWrapperTest {
                         instanceof CheckSignatureState.INVALID);
         assertTrue(
                 ((INVALID) verificationState).getNationalRulesState()
-                        instanceof CheckNationalRulesState.SUCCESS);
+                        instanceof CheckNationalRulesState.INVALID);
         assertTrue(
                 ((INVALID) verificationState).getRevocationState()
                         instanceof CheckRevocationState.SUCCESS);
@@ -106,6 +107,16 @@ class LibWrapperTest {
                 TestData.createTrustList(
                         TestData.getHardcodedSigningKeys("dev"), Collections.emptyList(), null);
         verificationState = VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
-        assertTrue(verificationState instanceof VerificationState.SUCCESS);
+        assertTrue(verificationState instanceof INVALID);
+        assertTrue(
+                ((INVALID) verificationState).getSignatureState()
+                        instanceof CheckSignatureState.SUCCESS);
+        assertTrue(
+                ((INVALID) verificationState).getNationalRulesState()
+                        instanceof CheckNationalRulesState.INVALID);
+        assertTrue(
+                ((INVALID) verificationState).getRevocationState()
+                        instanceof CheckRevocationState.SUCCESS);
+        ;
     }
 }
