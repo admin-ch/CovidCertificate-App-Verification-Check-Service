@@ -1,6 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.Eudgc;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.DccCert;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi.Builder;
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
@@ -14,11 +14,11 @@ import org.apache.commons.text.StringSubstitutor;
 
 public class TestDataGenerator {
 
-    private static final JsonAdapter<Eudgc> adapter =
+    private static final JsonAdapter<DccCert> adapter =
             new Builder()
                     .add(Date.class, new Rfc3339DateJsonAdapter())
                     .build()
-                    .adapter(Eudgc.class);
+                    .adapter(DccCert.class);
 
     /**
      * @param dn dose number
@@ -29,7 +29,7 @@ public class TestDataGenerator {
      * @param vp vaccine prophylaxis code
      * @param vaccinationDate
      */
-    public static Eudgc generateVaccineCert(
+    public static DccCert generateVaccineCert(
             Integer dn,
             Integer sd,
             String ma,

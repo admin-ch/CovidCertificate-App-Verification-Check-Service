@@ -1,6 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.model;
 
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
@@ -11,7 +11,7 @@ public class VerificationResponse {
     private SUCCESS successState;
     private ERROR errorState;
     private INVALID invalidState;
-    private DccHolder hcertDecoded;
+    private CertificateHolder hcertDecoded;
 
     public VerificationState getSuccessState() {
         return successState;
@@ -21,11 +21,11 @@ public class VerificationResponse {
         this.successState = successState;
     }
 
-    public DccHolder getHcertDecoded() {
+    public CertificateHolder getHcertDecoded() {
         return hcertDecoded;
     }
 
-    public void setHcertDecoded(DccHolder hcertDecoded) {
+    public void setHcertDecoded(CertificateHolder hcertDecoded) {
         this.hcertDecoded = hcertDecoded;
     }
 
