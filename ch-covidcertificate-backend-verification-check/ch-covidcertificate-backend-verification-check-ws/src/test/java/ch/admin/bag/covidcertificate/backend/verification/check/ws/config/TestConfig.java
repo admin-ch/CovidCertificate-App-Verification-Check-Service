@@ -10,11 +10,14 @@
 
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.config;
 
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.jackson.CustomInstantSerializer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -65,11 +68,16 @@ public class TestConfig implements WebMvcConfigurer {
 
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper()
-                // Need this to ignore subjectPublicKeyInfo field in /updates response
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new KotlinModule())
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
+        SimpleModule serialization = new SimpleModule();
+        serialization.addSerializer(Instant.class, new CustomInstantSerializer());
+        ObjectMapper objectMapper =
+                new ObjectMapper()
+                        // Needed to ignore `subjectPublicKeyInfo` field in /updates response
+                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                        .registerModule(new KotlinModule())
+                        .registerModule(new JavaTimeModule())
+                        .registerModule(serialization)
+                        .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
+        return objectMapper;
     }
 }

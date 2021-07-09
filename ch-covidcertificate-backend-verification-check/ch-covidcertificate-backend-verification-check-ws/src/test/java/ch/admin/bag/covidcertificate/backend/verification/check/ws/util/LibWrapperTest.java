@@ -6,33 +6,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.TestData;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerifyWrapper;
 import ch.admin.bag.covidcertificate.sdk.core.data.AcceptanceCriteriasConstants;
-import ch.admin.bag.covidcertificate.sdk.core.data.AcceptedVaccineProvider;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.Eudgc;
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.VaccinationEntry;
-import ch.admin.bag.covidcertificate.sdk.core.models.products.AcceptedVaccine;
-import ch.admin.bag.covidcertificate.sdk.core.models.products.Vaccine;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.DccCert;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier;
-import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collections;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -58,87 +49,9 @@ class LibWrapperTest {
             "LT1:6BFY90R10RDWT 9O60GO0000W50JB06H08CK%QC/70YM8N34GB8FN04BC6S5WY01BC9HH597MTKGVC*JC1A6/Q63W5KF6746TPCBEC7ZKW.CU2DNXO VD5$C JC3/DMP8$ILZEDZ CW.C9WE.Y9AY8+S9VIAI3D8WEVM8:S9C+9$PC5$CUZCY$5Y$527BK/CV3VEAFC48$CS/M8WBD543I 2QRK$G6RXQT-T74F$SCMWJ+*VADUJR1T46 /Q+38HH61HVL-U78GRAKUIOIVTWXG5%JL%Q1SPOF9";
 
     private static final Logger logger = LoggerFactory.getLogger(LibWrapperTest.class);
-    private static CertificateVerifier certificateVerifier;
+    private static CertificateVerifier certificateVerifier = new CertificateVerifier();
 
     @Autowired ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setup() {
-        try {
-            final var acceptedVaccines =
-                    objectMapper.readValue(
-                            new File("src/test/resources/acceptedCHVaccine.json"),
-                            AcceptedVaccine.class);
-            final var acceptedVaccineProvider =
-                    new AcceptedVaccineProvider() {
-
-                        @NotNull
-                        @Override
-                        public String getVaccineName(@NotNull VaccinationEntry vaccinationEntry) {
-                            final var matchingVaccine =
-                                    acceptedVaccines.getEntries().stream()
-                                            .filter(
-                                                    vaccine ->
-                                                            vaccine.getCode()
-                                                                    .equals(
-                                                                            vaccinationEntry
-                                                                                    .getMedicinialProduct()))
-                                            .findFirst();
-                            return matchingVaccine.map(Vaccine::getName).orElse("");
-                        }
-
-                        @NotNull
-                        @Override
-                        public String getProphylaxis(@NotNull VaccinationEntry vaccinationEntry) {
-                            final var matchingVaccine =
-                                    acceptedVaccines.getEntries().stream()
-                                            .filter(
-                                                    vaccine ->
-                                                            vaccine.getCode()
-                                                                    .equals(
-                                                                            vaccinationEntry
-                                                                                    .getMedicinialProduct()))
-                                            .findFirst();
-                            return matchingVaccine.map(Vaccine::getProphylaxis).orElse("");
-                        }
-
-                        @NotNull
-                        @Override
-                        public String getAuthHolder(@NotNull VaccinationEntry vaccinationEntry) {
-                            final var matchingVaccine =
-                                    acceptedVaccines.getEntries().stream()
-                                            .filter(
-                                                    vaccine ->
-                                                            vaccine.getCode()
-                                                                    .equals(
-                                                                            vaccinationEntry
-                                                                                    .getMedicinialProduct()))
-                                            .findFirst();
-                            return matchingVaccine.map(Vaccine::getAuth_holder).orElse("");
-                        }
-
-                        @Nullable
-                        @Override
-                        public Vaccine getVaccineDataFromList(
-                                @NotNull VaccinationEntry vaccinationEntry) {
-                            final var matchingVaccine =
-                                    acceptedVaccines.getEntries().stream()
-                                            .filter(
-                                                    vaccine ->
-                                                            vaccine.getCode()
-                                                                    .equals(
-                                                                            vaccinationEntry
-                                                                                    .getMedicinialProduct()))
-                                            .findFirst();
-                            return matchingVaccine.orElse(null);
-                        }
-                    };
-            final var nationalRulesVerifier = new NationalRulesVerifier(acceptedVaccineProvider);
-            certificateVerifier = new CertificateVerifier(nationalRulesVerifier);
-        } catch (IOException e) {
-            logger.error("Couldn't load accepted vaccine data from json: {}", e.getMessage());
-        }
-    }
 
     @Test
     void decodeTest() {
@@ -148,15 +61,15 @@ class LibWrapperTest {
         assertTrue(decodeState instanceof DecodeState.SUCCESS);
         // Test light certificate decoding
         decodeState = CertificateDecoder.decode(LT1_A);
-        assertTrue(decodeState instanceof DecodeState.SUCCESS);
+        assertTrue(decodeState instanceof DecodeState.ERROR);
     }
 
     @Test
     void verificationTest() {
 
-        // Create DccHolder
+        // Create CertificateHolder
         var clock = Clock.fixed(Instant.parse("2021-05-25T12:00:00Z"), ZoneId.systemDefault());
-        final Eudgc eudgc =
+        final DccCert eudgc =
                 TestDataGenerator.generateVaccineCert(
                         2,
                         2,
@@ -170,21 +83,21 @@ class LibWrapperTest {
         // Decode cert
         var decoding = CertificateDecoder.decode(HC1_A);
         assertTrue(decoding instanceof SUCCESS);
-        var dccHolder = ((SUCCESS) decoding).getDccHolder();
+        var certificateHolder = ((SUCCESS) decoding).getCertificateHolder();
 
         // Assert wrongly signed cert can't be verified
         TrustList trustList =
                 TestData.createTrustList(
                         TestData.getHardcodedSigningKeys("abn"), Collections.emptyList(), null);
         VerificationState verificationState =
-                VerifyWrapper.verify(certificateVerifier, dccHolder, trustList);
+                VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
         assertTrue(verificationState instanceof INVALID);
         assertTrue(
                 ((INVALID) verificationState).getSignatureState()
                         instanceof CheckSignatureState.INVALID);
         assertTrue(
                 ((INVALID) verificationState).getNationalRulesState()
-                        instanceof CheckNationalRulesState.SUCCESS);
+                        instanceof CheckNationalRulesState.INVALID);
         assertTrue(
                 ((INVALID) verificationState).getRevocationState()
                         instanceof CheckRevocationState.SUCCESS);
@@ -193,7 +106,17 @@ class LibWrapperTest {
         trustList =
                 TestData.createTrustList(
                         TestData.getHardcodedSigningKeys("dev"), Collections.emptyList(), null);
-        verificationState = VerifyWrapper.verify(certificateVerifier, dccHolder, trustList);
-        assertTrue(verificationState instanceof VerificationState.SUCCESS);
+        verificationState = VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
+        assertTrue(verificationState instanceof INVALID);
+        assertTrue(
+                ((INVALID) verificationState).getSignatureState()
+                        instanceof CheckSignatureState.SUCCESS);
+        assertTrue(
+                ((INVALID) verificationState).getNationalRulesState()
+                        instanceof CheckNationalRulesState.INVALID);
+        assertTrue(
+                ((INVALID) verificationState).getRevocationState()
+                        instanceof CheckRevocationState.SUCCESS);
+        ;
     }
 }

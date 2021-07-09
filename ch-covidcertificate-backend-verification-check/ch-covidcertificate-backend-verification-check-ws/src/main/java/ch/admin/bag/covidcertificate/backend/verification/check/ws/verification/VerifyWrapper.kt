@@ -1,20 +1,19 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
-
-import kotlinx.coroutines.runBlocking;
+import kotlinx.coroutines.runBlocking
 
 object VerifyWrapper {
 
     @JvmStatic
     fun verify(
-        certificateVerifier: CertificateVerifier,
-        dccHolder: DccHolder,
-        trustList: TrustList
+            certificateVerifier: CertificateVerifier,
+            certificateHolder: CertificateHolder,
+            trustList: TrustList
     ): VerificationState = runBlocking {
-        certificateVerifier.verify(dccHolder, trustList);
+        certificateVerifier.verify(certificateHolder, trustList);
     }
 }

@@ -53,20 +53,20 @@ object TestData {
         val e = "AQAB"
 
         return listOf(
-            Jwk.fromNE("", n, e, use = "")
+            Jwk.fromNE("", n, e, use = "sig")
         )
     }
 
     @JvmStatic
     fun getCertificateLightTestKey() =
-        Jwk.fromXY(LIGHT_TEST_KID, LIGHT_TEST_X, LIGHT_TEST_Y, use = "")
+        Jwk.fromXY(LIGHT_TEST_KID, LIGHT_TEST_X, LIGHT_TEST_Y, use = "l")
 
     @JvmStatic
     fun getHardcodedSigningKeys(flavor: String): List<Jwk> {
         val jwks = mutableListOf<Jwk>()
         when (flavor) {
             "dev" -> {
-                jwks.add(Jwk.fromNE(CH_DEV_KID, CH_DEV_N, CH_DEV_E, use = ""))
+                jwks.add(Jwk.fromNE(CH_DEV_KID, CH_DEV_N, CH_DEV_E, use = "sig"))
 
                 jwks.add(
                     Jwk.fromXY(
@@ -94,7 +94,7 @@ object TestData {
                 )
             }
             "abn" -> {
-                jwks.add(Jwk.fromNE(CH_ABN_KID, CH_ABN_N, CH_ABN_E, use = ""))
+                jwks.add(Jwk.fromNE(CH_ABN_KID, CH_ABN_N, CH_ABN_E, use = "sig"))
 
                 jwks.add(
                     Jwk.fromXY(
@@ -122,7 +122,7 @@ object TestData {
                 )
             }
             else -> {
-                jwks.add(Jwk.fromNE(CH_PROD_KID, CH_PROD_N, CH_PROD_E, use = ""))
+                jwks.add(Jwk.fromNE(CH_PROD_KID, CH_PROD_N, CH_PROD_E, use = "sig"))
             }
         }
         return jwks

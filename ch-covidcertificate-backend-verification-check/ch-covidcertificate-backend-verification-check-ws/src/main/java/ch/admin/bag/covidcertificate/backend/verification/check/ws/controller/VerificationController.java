@@ -11,9 +11,9 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
-import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.VerificationResponse;
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
@@ -57,19 +57,19 @@ public class VerificationController {
             @RequestBody HCertPayload hCertPayload) throws InterruptedException {
         // Decode hcert
         final var decodeState = verificationService.decodeHCert(hCertPayload);
-        DccHolder dccHolder;
+        CertificateHolder certificateHolder;
         if (decodeState instanceof DecodeState.SUCCESS) {
-            dccHolder = ((SUCCESS) decodeState).getDccHolder();
+            certificateHolder = ((SUCCESS) decodeState).getCertificateHolder();
         } else {
             return ResponseEntity.badRequest().build();
         }
 
         // Verify hcert
-        final var verificationState = verificationService.verifyDcc(dccHolder);
+        final var verificationState = verificationService.verifyDcc(certificateHolder);
 
         // Build response
         final var verificationResponse = new VerificationResponse();
-        verificationResponse.setHcertDecoded(dccHolder);
+        verificationResponse.setHcertDecoded(certificateHolder);
         if (verificationState instanceof VerificationState.SUCCESS) {
             verificationResponse.setSuccessState((VerificationState.SUCCESS) verificationState);
         } else if (verificationState instanceof ERROR) {

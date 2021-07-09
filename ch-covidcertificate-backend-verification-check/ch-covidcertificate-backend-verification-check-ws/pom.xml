@@ -70,7 +70,7 @@
         <dependency>
             <groupId>ch.admin.bag.covidcertificate</groupId>
             <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
-            <version>1.0.1</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -133,9 +133,9 @@
                 <configuration>
                     <groupId>ch.admin.bag.covidcertificate</groupId>
                     <artifactId>CovidCertificate-SDK-Kotlin</artifactId>
-                    <version>1.0.1</version>
+                    <version>1.1.0</version>
                     <packaging>jar</packaging>
-                    <file>${basedir}/../lib/CovidCertificate-SDK-Kotlin-1.0.1.jar</file>
+                    <file>${basedir}/../lib/CovidCertificate-SDK-Kotlin-1.1.0.jar</file>
                 </configuration>
                 <executions>
                     <execution>
