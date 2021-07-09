@@ -15,7 +15,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -47,7 +46,6 @@ public class VerificationService {
     private final String apiKey;
     private final RestTemplate rt = new RestTemplate();
     private final TrustListConfig trustListConfig = new TrustListConfig();
-    private final ObjectMapper objectMapper;
     private CertificateVerifier certificateVerifier = new CertificateVerifier();
 
     public VerificationService(
@@ -55,14 +53,12 @@ public class VerificationService {
             String dscEndpoint,
             String revocationEndpoint,
             String rulesEndpoint,
-            String apiKey,
-            ObjectMapper objectMapper) {
+            String apiKey) {
         this.verifierBaseUrl = verifierBaseUrl;
         this.dscEndpoint = dscEndpoint;
         this.revocationEndpoint = revocationEndpoint;
         this.rulesEndpoint = rulesEndpoint;
         this.apiKey = apiKey;
-        this.objectMapper = objectMapper;
         updateTrustListConfig();
     }
 

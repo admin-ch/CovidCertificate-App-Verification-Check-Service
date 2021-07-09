@@ -52,14 +52,9 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public VerificationService verificationService(ObjectMapper objectMapper) {
+    public VerificationService verificationService() {
         return new VerificationService(
-                verifierBaseUrl,
-                dscEndpoint,
-                revocationEndpoint,
-                rulesEndpoint,
-                apiKey,
-                objectMapper);
+                verifierBaseUrl, dscEndpoint, revocationEndpoint, rulesEndpoint, apiKey);
     }
 
     @Override
