@@ -34,7 +34,7 @@ public abstract class WsBaseConfig implements WebMvcConfigurer {
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
 
-    @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
+    @Value("${verifier.dsc.endpoint:/trust/v2/keys/updates}")
     private String dscEndpoint;
 
     @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
