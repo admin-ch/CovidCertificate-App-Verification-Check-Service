@@ -6,8 +6,13 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.Interme
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
@@ -15,9 +20,12 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier;
+import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesError;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +79,7 @@ public class VerificationService {
             RevokedCertificates revokedCerts = getRevokedCerts();
             RuleSet nationalRules = getNationalRules();
             this.trustListConfig.setTrustList(new TrustList(jwks, revokedCerts, nationalRules));
+            this.trustListConfig.setLastSync(Instant.now());
             logger.info("done updating trust list config");
         } catch (Exception e) {
             logger.error("failed to update trust list config", e);
@@ -178,7 +187,46 @@ public class VerificationService {
     }
 
     public VerificationState verifyDcc(CertificateHolder certificateHolder) {
-        return VerifyWrapper.verify(
-                certificateVerifier, certificateHolder, trustListConfig.getTrustList());
+        TrustList trustList = trustListConfig.getTrustList();
+        VerificationState state =
+                VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
+        return !trustListConfig.isOutdated() || state instanceof VerificationState.ERROR
+                ? state
+                : getOutdatedTrustListState(state);
+    }
+
+    /**
+     * returns an invalid response for outdated trust list. signature validation is also allowed
+     * with outdated trust list data (significant for pdf export)
+     *
+     * @param originalState
+     * @return
+     */
+    private VerificationState getOutdatedTrustListState(VerificationState originalState) {
+        logger.error(
+                "trust list is outdated. last successful sync at {}",
+                Date.from(trustListConfig.getLastSync()));
+        boolean signatureValid =
+                originalState instanceof SUCCESS
+                        || (originalState instanceof INVALID
+                                && ((INVALID) originalState).getSignatureState()
+                                        instanceof CheckSignatureState.SUCCESS);
+        CheckSignatureState signatureState;
+        if (!signatureValid) {
+            if (originalState instanceof VerificationState.INVALID) {
+                signatureState = ((VerificationState.INVALID) originalState).getSignatureState();
+            } else {
+                signatureState = new CheckSignatureState.INVALID("TRUST_LIST_OUTDATED");
+            }
+        } else {
+            signatureState = CheckSignatureState.SUCCESS.INSTANCE;
+        }
+
+        return new VerificationState.INVALID(
+                signatureState,
+                new CheckRevocationState.INVALID("TRUST_LIST_OUTDATED"),
+                new CheckNationalRulesState.INVALID(
+                        NationalRulesError.UNKNOWN_RULE_FAILED, "TRUST_LIST_OUTDATED"),
+                null);
     }
 }
