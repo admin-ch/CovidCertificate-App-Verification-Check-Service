@@ -38,6 +38,8 @@ public class VerificationService {
     private static final String UP_TO_DATE_HEADER = "up-to-date";
     private static final String NEXT_SINCE_HEADER = "X-Next-Since";
     private static final String SINCE_PARAM = "since";
+    private static final String CERT_FORMAT_PARAM = "certFormat";
+    private static final String UP_TO_PARAM = "upTo";
 
     private final String verifierBaseUrl;
     private final String dscEndpoint;
@@ -101,8 +103,8 @@ public class VerificationService {
 
     private Map<String, String> getKeyUpdatesParams() {
         final var params = new HashMap<String, String>();
-        String CERT_FORMAT_PARAM = "certFormat";
         params.put(CERT_FORMAT_PARAM, CertFormat.ANDROID.name());
+        params.put(UP_TO_PARAM, String.valueOf(Long.MAX_VALUE));
         return params;
     }
 
