@@ -12,7 +12,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesSta
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
-import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
