@@ -104,10 +104,22 @@ public class VerificationService {
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
             jwkList.addAll(response.getBody().getCerts());
             params.put(SINCE_PARAM, response.getHeaders().get(NEXT_SINCE_HEADER).get(0));
-            done = response.getHeaders().get(UP_TO_DATE_HEADER) != null;
+            done = upToDateHeaderIsTrue(response);
             it++;
         } while (!done && it < MAX_REQUESTS);
         return new Jwks(jwkList);
+    }
+
+    private boolean upToDateHeaderIsTrue(ResponseEntity<Jwks> response) {
+        List<String> upToDateHeaders = response.getHeaders().get(UP_TO_DATE_HEADER);
+        if (upToDateHeaders != null) {
+            for (String upToDateHeader : upToDateHeaders) {
+                if (Boolean.TRUE.toString().equals(upToDateHeader)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private Map<String, String> getKeyUpdatesParams() {
