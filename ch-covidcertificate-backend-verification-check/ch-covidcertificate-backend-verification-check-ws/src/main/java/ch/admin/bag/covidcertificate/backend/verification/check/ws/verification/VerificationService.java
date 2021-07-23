@@ -107,6 +107,7 @@ public class VerificationService {
             done = upToDateHeaderIsTrue(response);
             it++;
         } while (!done && it < MAX_REQUESTS);
+        logger.info("downloaded {} DSCs", jwkList.size());
         return new Jwks(jwkList);
     }
 
@@ -137,10 +138,13 @@ public class VerificationService {
      */
     private RevokedCertificates getRevokedCerts() throws URISyntaxException {
         logger.info("Updating list of revoked certificates");
-        return rt.exchange(
-                        getRequestEntity(revocationEndpoint, new HashMap<>()),
-                        RevokedCertificates.class)
-                .getBody();
+        RevokedCertificates revokedCerts =
+                rt.exchange(
+                                getRequestEntity(revocationEndpoint, new HashMap<>()),
+                                RevokedCertificates.class)
+                        .getBody();
+        logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
+        return revokedCerts;
     }
 
     /**
@@ -166,6 +170,7 @@ public class VerificationService {
                                                 rule.getInputParameter(),
                                                 rule.getLogic()))
                         .collect(Collectors.toList());
+        logger.info("downloaded {} rules", rules.size());
         return new RuleSet(
                 rules, intermediateRuleSet.getValueSets(), intermediateRuleSet.getValidDuration());
     }
