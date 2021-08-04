@@ -30,8 +30,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("v1")
 public class VerificationController {
 
@@ -49,7 +50,10 @@ public class VerificationController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @GetMapping(path = {"", "/"})
     public @ResponseBody String hello() {
-        return "Hello from CH CovidCertificate Verification Check WS";
+        logger.info("Received hello ping");
+        verificationService.sayHello();
+        throw new RuntimeException("booop");
+//        return "Hello from CH CovidCertificate Verification Check WS";
     }
 
     @PostMapping(path = {"/verify"})
