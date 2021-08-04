@@ -2,4 +2,5 @@
 **/*.log.*
 **/.project
 **/.classpath
+**/classpath-data.json
 **/.settings
