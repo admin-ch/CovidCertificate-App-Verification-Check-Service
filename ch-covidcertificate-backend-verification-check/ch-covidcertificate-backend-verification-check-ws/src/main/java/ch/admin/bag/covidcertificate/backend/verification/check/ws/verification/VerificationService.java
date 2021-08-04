@@ -53,6 +53,7 @@ public class VerificationService {
     private static final String CERT_FORMAT_PARAM = "certFormat";
     private static final String UP_TO_PARAM = "upTo";
     private final TrustListConfig trustListConfig = new TrustListConfig();
+    private final CertificateVerifier certificateVerifier = new CertificateVerifier();
 
     private final RestTemplate rt;
 
@@ -71,8 +72,6 @@ public class VerificationService {
     @Value("${verifier.api-key:}")
     private String apiKey;
 
-    private final CertificateVerifier certificateVerifier = new CertificateVerifier();
-
     public VerificationService(RestTemplate rt) {
         this.rt = rt;
     }
@@ -80,11 +79,6 @@ public class VerificationService {
     @PostConstruct
     public void init() {
         updateTrustListConfig();
-    }
-
-    public void sayHello() {
-        logger.info("Saying hello");
-        rt.getForEntity(verifierBaseUrl + "/trust/v2/keys", Void.class);
     }
 
     public void updateTrustListConfig() {

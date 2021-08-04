@@ -23,7 +23,6 @@ import ch.ubique.openapi.docannotations.Documentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,10 +49,7 @@ public class VerificationController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @GetMapping(path = {"", "/"})
     public @ResponseBody String hello() {
-        logger.info("Received hello ping");
-        verificationService.sayHello();
-        throw new RuntimeException("booop");
-//        return "Hello from CH CovidCertificate Verification Check WS";
+        return "Hello from CH CovidCertificate Verification Check WS";
     }
 
     @PostMapping(path = {"/verify"})
