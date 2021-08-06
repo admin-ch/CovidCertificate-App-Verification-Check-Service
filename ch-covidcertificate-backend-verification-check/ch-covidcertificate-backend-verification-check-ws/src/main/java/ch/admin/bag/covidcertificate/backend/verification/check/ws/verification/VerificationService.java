@@ -30,15 +30,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Service
 public class VerificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
@@ -48,27 +52,32 @@ public class VerificationService {
     private static final String SINCE_PARAM = "since";
     private static final String CERT_FORMAT_PARAM = "certFormat";
     private static final String UP_TO_PARAM = "upTo";
-
-    private final String verifierBaseUrl;
-    private final String dscEndpoint;
-    private final String revocationEndpoint;
-    private final String rulesEndpoint;
-    private final String apiKey;
-    private final RestTemplate rt = new RestTemplate();
     private final TrustListConfig trustListConfig = new TrustListConfig();
-    private CertificateVerifier certificateVerifier = new CertificateVerifier();
+    private final CertificateVerifier certificateVerifier = new CertificateVerifier();
 
-    public VerificationService(
-            String verifierBaseUrl,
-            String dscEndpoint,
-            String revocationEndpoint,
-            String rulesEndpoint,
-            String apiKey) {
-        this.verifierBaseUrl = verifierBaseUrl;
-        this.dscEndpoint = dscEndpoint;
-        this.revocationEndpoint = revocationEndpoint;
-        this.rulesEndpoint = rulesEndpoint;
-        this.apiKey = apiKey;
+    private final RestTemplate rt;
+
+    @Value("${verifier.baseurl}")
+    private String verifierBaseUrl;
+
+    @Value("${verifier.dsc.endpoint:/trust/v2/keys/updates}")
+    private String dscEndpoint;
+
+    @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
+    private String revocationEndpoint;
+
+    @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
+    private String rulesEndpoint;
+
+    @Value("${verifier.api-key:}")
+    private String apiKey;
+
+    public VerificationService(RestTemplate rt) {
+        this.rt = rt;
+    }
+
+    @PostConstruct
+    public void init() {
         updateTrustListConfig();
     }
 

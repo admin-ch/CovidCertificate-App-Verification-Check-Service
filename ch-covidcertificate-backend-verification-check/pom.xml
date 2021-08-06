@@ -24,6 +24,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <spring-boot-version>2.5.3</spring-boot-version>
+        <spring-cloud-sleuth-version>3.0.3</spring-cloud-sleuth-version>
         <jackson-version>2.11.1</jackson-version>
         <spring-cloud-connectors-version>2.0.7.RELEASE</spring-cloud-connectors-version>
 
@@ -77,6 +78,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -142,6 +147,13 @@
                 <artifactId>spring-boot-dependencies</artifactId>
                 <type>pom</type>
                 <version>${spring-boot-version}</version>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth</artifactId>
+                <version>${spring-cloud-sleuth-version}</version>
+                <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
