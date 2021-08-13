@@ -114,8 +114,16 @@ public class VerificationService {
             ResponseEntity<Jwks> response =
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
             jwkList.addAll(response.getBody().getCerts());
-            params.put(SINCE_PARAM, response.getHeaders().get(NEXT_SINCE_HEADER).get(0));
-            done = upToDateHeaderIsTrue(response.getHeaders());
+
+            HttpHeaders headers = response.getHeaders();
+            List<String> nextSince = headers.get(NEXT_SINCE_HEADER);
+            if (nextSince != null && !nextSince.isEmpty()) {
+                params.put(SINCE_PARAM, nextSince.get(0));
+                done = upToDateHeaderIsTrue(headers);
+            } else { // fallback. exit loop if no next since header sent
+                done = true;
+            }
+
             it++;
         } while (!done && it < MAX_REQUESTS);
         logger.info("downloaded {} DSCs", jwkList.size());
@@ -157,13 +165,20 @@ public class VerificationService {
         boolean done = upToDateHeaderIsTrue(response.getHeaders());
         int it = 1;
         while (!done && it < MAX_REQUESTS) {
-            params.put(SINCE_PARAM, response.getHeaders().get(NEXT_SINCE_HEADER).get(0));
-            response =
-                    rt.exchange(
-                            getRequestEntity(revocationEndpoint, params),
-                            RevokedCertificates.class);
-            addRevokedCerts(revokedCerts, response.getBody());
-            done = upToDateHeaderIsTrue(response.getHeaders());
+            HttpHeaders headers = response.getHeaders();
+            List<String> nextSince = headers.get(NEXT_SINCE_HEADER);
+            if (nextSince != null && !nextSince.isEmpty()) {
+                params.put(SINCE_PARAM, nextSince.get(0));
+                response =
+                        rt.exchange(
+                                getRequestEntity(revocationEndpoint, params),
+                                RevokedCertificates.class);
+                addRevokedCerts(revokedCerts, response.getBody());
+                done = upToDateHeaderIsTrue(headers);
+            } else { // fallback. exit loop if no next since header sent
+                done = true;
+            }
+
             it++;
         }
 
@@ -172,7 +187,9 @@ public class VerificationService {
     }
 
     private void addRevokedCerts(RevokedCertificates revokedCerts, RevokedCertificates toAdd) {
-        revokedCerts.getRevokedCerts().addAll(toAdd.getRevokedCerts());
+        if (revokedCerts != null && toAdd != null) {
+            revokedCerts.getRevokedCerts().addAll(toAdd.getRevokedCerts());
+        }
     }
 
     /**
