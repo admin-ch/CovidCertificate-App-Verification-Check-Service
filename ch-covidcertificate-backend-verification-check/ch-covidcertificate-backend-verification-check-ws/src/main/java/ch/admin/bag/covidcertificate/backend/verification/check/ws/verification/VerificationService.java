@@ -52,6 +52,9 @@ public class VerificationService {
     private static final String SINCE_PARAM = "since";
     private static final String CERT_FORMAT_PARAM = "certFormat";
     private static final String UP_TO_PARAM = "upTo";
+
+    private static final int MAX_REQUESTS = 1000;
+
     private final TrustListConfig trustListConfig = new TrustListConfig();
     private final CertificateVerifier certificateVerifier = new CertificateVerifier();
 
@@ -63,7 +66,7 @@ public class VerificationService {
     @Value("${verifier.dsc.endpoint:/trust/v2/keys/updates}")
     private String dscEndpoint;
 
-    @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
+    @Value("${verifier.revocation.endpoint:/trust/v2/revocationList}")
     private String revocationEndpoint;
 
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
@@ -107,21 +110,20 @@ public class VerificationService {
         List<Jwk> jwkList = new ArrayList<>();
         boolean done = false;
         int it = 0;
-        int MAX_REQUESTS = 1000;
         do {
             ResponseEntity<Jwks> response =
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
             jwkList.addAll(response.getBody().getCerts());
             params.put(SINCE_PARAM, response.getHeaders().get(NEXT_SINCE_HEADER).get(0));
-            done = upToDateHeaderIsTrue(response);
+            done = upToDateHeaderIsTrue(response.getHeaders());
             it++;
         } while (!done && it < MAX_REQUESTS);
         logger.info("downloaded {} DSCs", jwkList.size());
         return new Jwks(jwkList);
     }
 
-    private boolean upToDateHeaderIsTrue(ResponseEntity<Jwks> response) {
-        List<String> upToDateHeaders = response.getHeaders().get(UP_TO_DATE_HEADER);
+    private boolean upToDateHeaderIsTrue(HttpHeaders headers) {
+        List<String> upToDateHeaders = headers.get(UP_TO_DATE_HEADER);
         if (upToDateHeaders != null) {
             for (String upToDateHeader : upToDateHeaders) {
                 if (Boolean.TRUE.toString().equals(upToDateHeader)) {
@@ -147,13 +149,30 @@ public class VerificationService {
      */
     private RevokedCertificates getRevokedCerts() throws URISyntaxException {
         logger.info("Updating list of revoked certificates");
-        RevokedCertificates revokedCerts =
+        Map<String, String> params = new HashMap<>();
+        ResponseEntity<RevokedCertificates> response =
                 rt.exchange(
-                                getRequestEntity(revocationEndpoint, new HashMap<>()),
-                                RevokedCertificates.class)
-                        .getBody();
+                        getRequestEntity(revocationEndpoint, params), RevokedCertificates.class);
+        RevokedCertificates revokedCerts = response.getBody();
+        boolean done = upToDateHeaderIsTrue(response.getHeaders());
+        int it = 1;
+        while (!done && it < MAX_REQUESTS) {
+            params.put(SINCE_PARAM, response.getHeaders().get(NEXT_SINCE_HEADER).get(0));
+            response =
+                    rt.exchange(
+                            getRequestEntity(revocationEndpoint, params),
+                            RevokedCertificates.class);
+            addRevokedCerts(revokedCerts, response.getBody());
+            done = upToDateHeaderIsTrue(response.getHeaders());
+            it++;
+        }
+
         logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
         return revokedCerts;
+    }
+
+    private void addRevokedCerts(RevokedCertificates revokedCerts, RevokedCertificates toAdd) {
+        revokedCerts.getRevokedCerts().addAll(toAdd.getRevokedCerts());
     }
 
     /**
