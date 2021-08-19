@@ -87,6 +87,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ch.admin.bag.covidcertificate</groupId>
+            <artifactId>cc-backend-logging</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
         <!-- LogBack dependencies -->
         <dependency>
