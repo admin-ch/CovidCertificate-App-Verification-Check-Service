@@ -17,7 +17,11 @@ import org.springframework.context.annotation.FilterType;
 
 @SpringBootApplication
 @ComponentScan(
-        basePackages = {"ch.admin.bag.covidcertificate.backend.verification.check.ws.config"},
+        basePackages = {
+            "ch.admin.bag.covidcertificate.backend.verification.check.ws.config",
+            "ch.admin.bag.covidcertificate.log",
+            "ch.admin.bag.covidcertificate.rest"
+        },
         excludeFilters = {
             @ComponentScan.Filter(
                     type = FilterType.ASSIGNABLE_TYPE,
