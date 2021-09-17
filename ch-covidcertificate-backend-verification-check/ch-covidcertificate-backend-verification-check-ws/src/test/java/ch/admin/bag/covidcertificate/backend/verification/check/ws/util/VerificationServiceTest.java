@@ -41,7 +41,7 @@ class VerificationServiceTest {
     private static final String verifierBaseUrl = "verifier.test.ch";
     private static final String dscEndpoint = "/trust/v1/keys/updates";
     private static final String rulesEndpoint = "/trust/v1/verificationRules";
-    private static final String revocationEndpoint = "/trust/v1/revocationList";
+    private static final String revocationEndpoint = "/trust/v2/revocationList";
     private static Map<String, String> etagMap = new HashMap<>();
     @Autowired ObjectMapper objectMapper;
 

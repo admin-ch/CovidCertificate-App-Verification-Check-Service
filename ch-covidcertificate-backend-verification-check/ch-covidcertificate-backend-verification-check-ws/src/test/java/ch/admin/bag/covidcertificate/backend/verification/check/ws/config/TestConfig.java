@@ -37,7 +37,7 @@ public class TestConfig implements WebMvcConfigurer {
     @Value("${verifier.dsc.endpoint:/trust/v1/keys/updates}")
     private String dscEndpoint;
 
-    @Value("${verifier.revocation.endpoint:/trust/v1/revocationList}")
+    @Value("${verifier.revocation.endpoint:/trust/v2/revocationList}")
     private String revocationEndpoint;
 
     @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
