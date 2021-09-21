@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
@@ -244,8 +245,13 @@ public class VerificationService {
         return headers;
     }
 
-    public DecodeState decodeHCert(HCertPayload hCertPayload) {
-        return CertificateDecoder.decode(hCertPayload.getHcert());
+    public CertificateHolder decodeHCert(HCertPayload hCertPayload) {
+        final var decodeState = CertificateDecoder.decode(hCertPayload.getHcert());
+        if (decodeState instanceof DecodeState.SUCCESS) {
+            return ((DecodeState.SUCCESS) decodeState).getCertificateHolder();
+        } else {
+            throw new DecodingException("Couldn't decode hcert");
+        }
     }
 
     public VerificationState verifyDcc(CertificateHolder certificateHolder) {
