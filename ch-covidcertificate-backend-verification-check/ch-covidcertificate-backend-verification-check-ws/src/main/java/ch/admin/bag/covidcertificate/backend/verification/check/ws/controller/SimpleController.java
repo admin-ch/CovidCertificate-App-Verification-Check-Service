@@ -51,7 +51,7 @@ public class SimpleController {
                 Instant.now().toEpochMilli() - start.toEpochMilli());
         return ResponseEntity.status(200).body(simpleVerificationResponse);
     }
-git s
+
     @ExceptionHandler(DecodingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> invalidHCert(DecodingException e) {
