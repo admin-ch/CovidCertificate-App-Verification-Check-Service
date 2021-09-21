@@ -5,6 +5,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CovidCertificate
 public class SimpleVerificationResponse {
 
     private final CovidCertificate certificate;
+    // TODO: How much information is needed here? Do we need 3 separate boolean fields? Error codes?
     private boolean isValid;
 
     public SimpleVerificationResponse(CovidCertificate certificate) {
