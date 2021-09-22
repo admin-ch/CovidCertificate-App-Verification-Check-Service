@@ -12,6 +12,24 @@ The app design, UX and implementation was done by [Ubique](https://www.ubique.ch
 This service provides an API, which is consumed by other CovidCertificate backend services. It offers an endpoint to allow the decoding and verification of a given Covid Certificate.
 It regularly sends a request to the [Verifier Service](https://github.com/admin-ch/CovidCertificate-App-Verifier-Service) to keep an up-to-date list of trusted DSCs with which Covid Certificates could be signed.
 
+## Simple Verification
+
+In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, the repository includes a Dockerfile to start the service in a separate container. However, one needs to be in possession of the Verifier-Service's baseurl and a corresponding api-token to use the service.
+
+To build the image, clone the repository and run
+```
+docker build -t simple-verification CovidCertificate-App-Verification-Check-Service
+```
+
+Then start the container by running
+```
+docker run --name simple-verification -e BASEURL=... -e APIKEY=... simple-verification
+```
+
+The service is now exposed on port 8080. Certificates can be verified by sending requests to `/simple/verify`. See the documentation for more. 
+TODO: Swagger doc
+
+
 ## Contribution Guide
 
 This project is truly open-source and we welcome any feedback on the code regarding both the implementation and security aspects.
