@@ -2,6 +2,7 @@ FROM adoptopenjdk/openjdk11
 
 LABEL maintainer="Lasse Meinen <meinen@ubique.ch>"
 
+# Note: Newest release doesn't include simple controller yet
 ARG VERSION=v2.6.0-prerelease
 
 # Install ws
