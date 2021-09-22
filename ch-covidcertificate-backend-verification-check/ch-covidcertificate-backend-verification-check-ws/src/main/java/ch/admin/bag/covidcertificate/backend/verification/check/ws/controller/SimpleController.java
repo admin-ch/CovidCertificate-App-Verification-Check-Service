@@ -5,6 +5,8 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.Decodin
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.SimpleVerificationResponse;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +49,16 @@ public class SimpleController {
         // Build response
         final var simpleVerificationResponse =
                 new SimpleVerificationResponse(certificateHolder.getCertificate());
-        simpleVerificationResponse.setValid(verificationState instanceof VerificationState.SUCCESS);
+        if (verificationState instanceof VerificationState.SUCCESS) {
+            simpleVerificationResponse.setSuccessState(
+                    (VerificationState.SUCCESS) verificationState);
+        } else if (verificationState instanceof ERROR) {
+            simpleVerificationResponse.setErrorState((ERROR) verificationState);
+        } else {
+            simpleVerificationResponse.setInvalidState((INVALID) verificationState);
+        }
         logger.info(
-                "Successfuly verified hcert in {} ms",
+                "Checked validity of hcert in {} ms",
                 Instant.now().toEpochMilli() - start.toEpochMilli());
         return ResponseEntity.status(200).body(simpleVerificationResponse);
     }

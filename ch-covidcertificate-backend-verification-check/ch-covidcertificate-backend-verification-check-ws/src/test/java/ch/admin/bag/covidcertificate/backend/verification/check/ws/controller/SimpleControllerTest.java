@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.SimpleVerificationResponse;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -58,6 +59,6 @@ class SimpleControllerTest extends BaseControllerTest {
         final var verificationResponse =
                 objectMapper.readValue(
                         response.getContentAsString(), SimpleVerificationResponse.class);
-        assertTrue(verificationResponse.isValid());
+        assertTrue(verificationResponse.getSuccessState() instanceof SUCCESS);
     }
 }
