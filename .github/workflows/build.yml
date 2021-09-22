@@ -39,10 +39,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file ch-covidcertificate-backend-verification-check/pom.xml
-      - name: Prepare Artifact Files
-        run: mkdir package && cp ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/target/*.jar package
-      - name: Produce Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: Verifier
-          path: package
