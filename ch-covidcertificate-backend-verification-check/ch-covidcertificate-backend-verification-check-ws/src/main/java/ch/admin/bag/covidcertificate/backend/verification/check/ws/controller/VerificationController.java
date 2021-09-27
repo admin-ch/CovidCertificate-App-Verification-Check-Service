@@ -55,8 +55,15 @@ public class VerificationController {
         return "Hello from CH CovidCertificate Verification Check WS";
     }
 
+    @Documentation(
+            description = "Certificate verification endpoint",
+            responses = {
+                "200 => The certificate could be fully decoded - The response contains its verification status",
+                "400 => The certificate couldn't be decoded"
+            })
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping(path = {"/verify"})
-    public @ResponseBody ResponseEntity<VerificationResponse> verify(
+    public @ResponseBody VerificationResponse verify(
             @RequestBody HCertPayload hCertPayload) {
         // Decode hcert
         final var certificateHolder = verificationService.decodeHCert(hCertPayload);
@@ -74,7 +81,7 @@ public class VerificationController {
         } else {
             verificationResponse.setInvalidState((INVALID) verificationState);
         }
-        return ResponseEntity.status(200).body(verificationResponse);
+        return verificationResponse;
     }
 
     @ExceptionHandler(DecodingException.class)

@@ -7,12 +7,14 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
+import ch.ubique.openapi.docannotations.Documentation;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,9 +36,15 @@ public class SimpleController {
         this.verificationService = verificationService;
     }
 
+    @Documentation(
+            description = "Simplified certificate verification endpoint",
+            responses = {
+                "200 => The certificate could be fully decoded - The response contains its verification status",
+                "400 => The certificate couldn't be decoded"
+            })
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping("/verify")
-    public @ResponseBody ResponseEntity<SimpleVerificationResponse> verify(
-            @RequestBody HCertPayload hCertPayload) {
+    public @ResponseBody SimpleVerificationResponse verify(@RequestBody HCertPayload hCertPayload) {
         final var start = Instant.now();
         // Decode hcert
         logger.info("Decoding hcert");
@@ -60,7 +68,7 @@ public class SimpleController {
         logger.info(
                 "Checked validity of hcert in {} ms",
                 Instant.now().toEpochMilli() - start.toEpochMilli());
-        return ResponseEntity.status(200).body(simpleVerificationResponse);
+        return simpleVerificationResponse;
     }
 
     @ExceptionHandler(DecodingException.class)
