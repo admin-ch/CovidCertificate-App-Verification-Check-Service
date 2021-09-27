@@ -16,19 +16,49 @@ It regularly sends a request to the [Verifier Service](https://github.com/admin-
 
 In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, the repository includes a Dockerfile to start the service in a separate container. However, one needs to be in possession of the Verifier-Service's baseurl and a corresponding api-token to use the service.
 
+### Starting the service
+
 To build the image, clone the repository and run
-```
+```bash
 docker build -t simple-verification CovidCertificate-App-Verification-Check-Service
 ```
 
 Then start the container by running
-```
+```bash
 docker run --name simple-verification -e BASEURL=... -e APIKEY=... simple-verification
 ```
 
-The service is now exposed on port 8080. Certificates can be verified by sending requests to `/simple/verify`. See the documentation for more. 
-TODO: Swagger doc
+The service is now exposed on port 8080.
 
+### Verifying certificates
+
+Certificates can be verified by sending POST requests to `/simple/verify`, where the payload should be JSON with the following format:
+```json
+{
+  "hcert": "Base-45-encoded covid certificate with prefix 'HC1:' to be decoded and verified"
+}
+```
+
+The endpoint will respond with status code 400 if the certificate couldn't be decoded. Otherwise, it will respond with status code 200 and the following JSON:
+```json
+{
+  "certificate": {
+    "version": "1.0.0",
+    "person": {
+      "familyName": "Müller",
+      "standardizedFamilyName": "MUELLER",
+      "givenName": "Chloé",
+      "standardizedGivenName": "CHLOE"
+    },
+    "dateOfBirth": "28.12.1962",
+    "formattedDateOfBirth": "28.12.1962"
+  },
+  "successState": "...",
+  "errorState": "...",
+  "invalidState": "..."
+}
+```
+where only one of the three fields `successState`, `errorState` and `invalidState` is set to a non-null value, thereby indicating the corresponding verification-status.
 
 ## Contribution Guide
 
