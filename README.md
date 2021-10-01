@@ -33,7 +33,7 @@ The service is now exposed on port 8080.
 
 ### Verifying certificates
 
-Certificates can be verified by sending POST requests to `/simple/verify`, where the payload should be JSON with the following format:
+Certificates can be verified by sending POST requests to `/v1/simple/verify`, where the payload should be JSON with the following format:
 ```json
 {
   "hcert": "Base-45-encoded covid certificate with prefix 'HC1:' to be decoded and verified"
