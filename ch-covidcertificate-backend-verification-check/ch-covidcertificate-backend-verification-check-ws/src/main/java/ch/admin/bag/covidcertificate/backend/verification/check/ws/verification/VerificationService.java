@@ -250,7 +250,7 @@ public class VerificationService {
         if (decodeState instanceof DecodeState.SUCCESS) {
             return ((DecodeState.SUCCESS) decodeState).getCertificateHolder();
         } else {
-            throw new DecodingException("Couldn't decode hcert");
+            throw new DecodingException("Couldn't decode hcert: " + ((DecodeState.ERROR) decodeState).getError().getMessage());
         }
     }
 

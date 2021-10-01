@@ -75,6 +75,6 @@ public class SimpleController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> invalidHCert(DecodingException e) {
         logger.info("Decoding exception thrown: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMsg());
     }
 }

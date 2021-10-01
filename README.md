@@ -14,19 +14,20 @@ It regularly sends a request to the [Verifier Service](https://github.com/admin-
 
 ## Simple Verification
 
-In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, the repository includes a Dockerfile to start the service in a separate container. However, one needs to be in possession of the Verifier-Service's baseurl and a corresponding api-token to use the service.
+In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, the repository includes a Dockerfile to start the service in a separate container. However, one needs to be in possession of an api-token to access the Verifier-Service.
 
 ### Starting the service
 
-To build the image, clone the repository and run
+To build the image, clone the repository, `cd` into the cloned directory and run
 ```bash
-docker build -t simple-verification CovidCertificate-App-Verification-Check-Service
+docker build -t simple-verification .
 ```
 
 Then start the container by running
 ```bash
-docker run --name simple-verification -e BASEURL=... -e APIKEY=... simple-verification
+docker run --name simple-verification --build-arg VERSION=... -e PROFILE=... -e APIKEY=... simple-verification
 ```
+where `PROFILE` will is one of `DEV`, `ABN` or `PROD`, and `VERSION` is at least `v2.6.0-prerelease`.
 
 The service is now exposed on port 8080.
 
