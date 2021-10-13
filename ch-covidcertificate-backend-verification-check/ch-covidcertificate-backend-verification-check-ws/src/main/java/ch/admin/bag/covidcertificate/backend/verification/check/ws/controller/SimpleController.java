@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Profile("simple")
 @RestController
-@RequestMapping("/v1/simple")
+@RequestMapping("/v1")
 public class SimpleController {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleController.class);
