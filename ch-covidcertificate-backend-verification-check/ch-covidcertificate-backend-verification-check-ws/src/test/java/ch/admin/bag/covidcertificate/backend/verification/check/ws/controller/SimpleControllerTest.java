@@ -19,7 +19,7 @@ class SimpleControllerTest extends BaseControllerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleControllerTest.class);
 
-    private static final String BASE_URL = "/simple";
+    private static final String BASE_URL = "/";
     private static final String VERIFY_ENDPOINT = "/verify";
 
     private static final String HC1_A =

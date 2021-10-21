@@ -12,28 +12,23 @@ The app design, UX and implementation was done by [Ubique](https://www.ubique.ch
 This service provides an API, which is consumed by other CovidCertificate backend services. It offers an endpoint to allow the decoding and verification of a given Covid Certificate.
 It regularly sends a request to the [Verifier Service](https://github.com/admin-ch/CovidCertificate-App-Verifier-Service) to keep an up-to-date list of trusted DSCs with which Covid Certificates could be signed.
 
-## Simple Verification
+## Local Deployment
 
-In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, the repository includes a Dockerfile to start the service in a separate container. However, one needs to be in possession of an api-token to access the Verifier-Service.
+In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, Docker container images are provided on DockerHub (TODO: link). In order for the service to connect to the Verifier-Service, an API token is required. If you intend to deploy your own instance of the Verification-Check-Service, please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
+
 
 ### Starting the service
 
-To build the image, clone the repository, `cd` into the cloned directory and run
+Download and start the container by running
 ```bash
-docker build -t simple-verification .
+docker run -p 8080:8080 -e APIKEY=<API obtained from BAG> adminch/covidcert-verification-checker:latest
 ```
 
-Then start the container by running
-```bash
-docker run --name simple-verification --build-arg VERSION=... -e PROFILE=... -e APIKEY=... simple-verification
-```
-where `PROFILE` will is one of `DEV`, `ABN` or `PROD`, and `VERSION` is at least `v2.6.0-prerelease`.
-
-The service is now exposed on port 8080.
+The service is now exposed on port 8080 (change the first number in the `-p` argument to change the port).
 
 ### Verifying certificates
 
-Certificates can be verified by sending POST requests to `/v1/simple/verify`, where the payload should be JSON with the following format:
+Certificates can be verified by sending POST requests to `/v1/verify`, where the payload should be JSON with the following format:
 ```json
 {
   "hcert": "Base-45-encoded covid certificate with prefix 'HC1:' to be decoded and verified"
