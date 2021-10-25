@@ -14,14 +14,14 @@ It regularly sends a request to the [Verifier Service](https://github.com/admin-
 
 ## Local Deployment
 
-In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, Docker container images are provided on DockerHub (TODO: link). In order for the service to connect to the Verifier-Service, an API token is required. If you intend to deploy your own instance of the Verification-Check-Service, please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
+In order to allow the independent usage of the Verification-Check-Service without deeper knowledge of the source code, Docker container images are provided on [DockerHub](https://hub.docker.com/r/adminch/covidcertificate-app-verification-check-service). In order for the service to connect to the Verifier-Service, an API token is required. If you intend to deploy your own instance of the Verification-Check-Service, please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
 
 
 ### Starting the service
 
 Download and start the container by running
 ```bash
-docker run -p 8080:8080 -e APIKEY=<API obtained from BAG> adminch/covidcert-verification-checker:latest
+docker run -p 8080:8080 -e APIKEY=<API obtained from BAG> adminch/covidcertificate-app-verification-check-service:latest
 ```
 
 The service is now exposed on port 8080 (change the first number in the `-p` argument to change the port).

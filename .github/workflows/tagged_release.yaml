@@ -46,13 +46,13 @@ jobs:
       - name: Build and push docker
         env: 
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
-          APP_NAME: covidcert-verification-checker
+          APP_NAME: covidcertificate-app-verification-check-service
         run: |
           mvn --batch-mode compile com.google.cloud.tools:jib-maven-plugin:3.1.4:build -f ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/pom.xml \
-          -Dimage=${{ secrets.DOCKER_USER}}/${{ env.APP_NAME }} \
+          -Dimage=${{ secrets.DOCKER_HUB_USERNAME}}/${{ env.APP_NAME }} \
           -Djib.from.image=adoptopenjdk:11-jre \
-          -Djib.to.auth.username=${{ secrets.DOCKER_USER }} \
-          -Djib.to.auth.password=${{ secrets.DOCKER_TOKEN }} \
+          -Djib.to.auth.username=${{ secrets.DOCKER_HUB_USERNAME }} \
+          -Djib.to.auth.password=${{ secrets.DOCKER_HUB }} \
           -Djib.container.volumes=/config/ \
           -Djib.to.tags="${{ env.SOURCE_TAG}}",latest
 
