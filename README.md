@@ -31,7 +31,7 @@ The service is now exposed on port 8080 (change the first number in the `-p` arg
 Certificates can be verified by sending POST requests to `/v1/verify`, where the payload should be JSON with the following format:
 ```json
 {
-  "hcert": "Base-45-encoded covid certificate with prefix 'HC1:' to be decoded and verified"
+  "hcert": "The raw payload of the certificate QR code beginning with 'HC1:'"
 }
 ```
 
@@ -52,9 +52,131 @@ The endpoint will respond with status code 400 if the certificate couldn't be de
   "successState": "...",
   "errorState": "...",
   "invalidState": "..."
-}
+  }
 ```
-where only one of the three fields `successState`, `errorState` and `invalidState` is set to a non-null value, thereby indicating the corresponding verification-status.
+where only one of the three fields `successState`, `errorState`, `invalidState` is set to a non-null value, thereby indicating the corresponding verification-status.
+
+<details>
+  <summary>Examples</summary>
+  
+Request payload:
+  ```json
+  {"hcert": "HC1:NCFJ60EG0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK+500XKY-CE59-G80:84F3ZKG%QU2F30GK JEY50.FK6ZK7:EDOLOPCF8F746KG7+59.Q6+A80:6JM8SX8RM8.A8TL6IA7-Q6.Q6JM8WJCT3EYM8XJC +DXJCCWENF6OF63W5$Q69L6%JC+QE$.32%E6VCHQEU$DE44NXOBJE719$QE0/D+8D-ED.24-G8$:8.JCBECB1A-:8$96646AL60A60S6Q$D.UDRYA 96NF6L/5QW6307KQEPD09WEQDD+Q6TW6FA7C466KCN9E%961A6DL6FA7D46JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50G7AZQ4CUBCD9-FV-.6+OJROVHIBEI3KMU/TLRYPM0FA9DCTID.GQ$NYE3NPBP90/9IQH24YL7WMO0CNV1 SDB1AHX7:O26872.NV/LC+VJ75L%NGF7PT134ERGJ.I0 /49BB6JA7WKY:AL19PB120CUQ37XL1P9505-YEFJHVETB3CB-KE8EN9BPQIMPRTEW*DU+X2STCJ6O6S4XXVJ$UQNJW6IIO0X20D4S3AWSTHTA5FF7I/J9:8ALF/VP 4K1+8QGI:N0H 91QBHPJLSMNSJC BFZC5YSD.9-9E5R8-.IXUB-OG1RRQR7JEH/5T852EA3T7P6 VPFADBFUN0ZD93MQY07/4OH1FKHL9P95LIG841 BM7EXDR/PLCUUE88+-IX:Q"}
+  ```  
+
+  Response for valid certificate:
+  ```json
+{
+   "certificate":{
+      "version":"1.0.0",
+      "person":{
+         "familyName":"vaccine",
+         "standardizedFamilyName":"VACCINE",
+         "givenName":"valid from today",
+         "standardizedGivenName":"VALID<FROM<TODAY"
+      },
+      "dateOfBirth":"15.01.1970",
+      "personName":{
+         "familyName":"vaccine",
+         "standardizedFamilyName":"VACCINE",
+         "givenName":"valid from today",
+         "standardizedGivenName":"VALID<FROM<TODAY"
+      },
+      "formattedDateOfBirth":"15.01.1970"
+   },
+   "successState":{
+      "isLightCertificate":false,
+      "validityRange":{
+         "validFrom":[
+            2021,
+            10,
+            13,
+            0,
+            0
+         ],
+         "validUntil":[
+            2022,
+            10,
+            12,
+            0,
+            0
+         ]
+      }
+   },
+   "errorState":null,
+   "invalidState":null
+}
+  ```
+  
+  Response for invalid certificate (e.g. expired)
+  ```json
+{
+   "certificate":{
+      "version":"1.0.0",
+      "person":{
+         "familyName":"vaccine",
+         "standardizedFamilyName":"VACCINE",
+         "givenName":"valid until today",
+         "standardizedGivenName":"VALID<UNTIL<TODAY"
+      },
+      "dateOfBirth":"15.01.1970",
+      "personName":{
+         "familyName":"vaccine",
+         "standardizedFamilyName":"VACCINE",
+         "givenName":"valid until today",
+         "standardizedGivenName":"VALID<UNTIL<TODAY"
+      },
+      "formattedDateOfBirth":"15.01.1970"
+   },
+   "successState":null,
+   "errorState":null,
+   "invalidState":{
+      "signatureState":{
+         
+      },
+      "revocationState":{
+         
+      },
+      "nationalRulesState":{
+         "validityRange":{
+            "validFrom":[
+               2020,
+               10,
+               13,
+               0,
+               0
+            ],
+            "validUntil":[
+               2021,
+               10,
+               12,
+               0,
+               0
+            ]
+         },
+         "ruleId":"VR-CH-0006"
+      },
+      "validityRange":{
+         "validFrom":[
+            2020,
+            10,
+            13,
+            0,
+            0
+         ],
+         "validUntil":[
+            2021,
+            10,
+            12,
+            0,
+            0
+         ]
+      }
+   }
+}
+  ```
+  
+</details>
 
 ## Contribution Guide
 
