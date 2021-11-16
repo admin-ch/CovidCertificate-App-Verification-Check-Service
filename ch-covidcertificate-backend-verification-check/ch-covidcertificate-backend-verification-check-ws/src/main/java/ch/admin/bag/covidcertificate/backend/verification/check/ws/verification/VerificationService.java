@@ -3,6 +3,7 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
+// import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
@@ -14,6 +15,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
@@ -70,7 +72,7 @@ public class VerificationService {
     @Value("${verifier.revocation.endpoint:/trust/v2/revocationList}")
     private String revocationEndpoint;
 
-    @Value("${verifier.rules.endpoint:/trust/v1/verificationRules}")
+    @Value("${verifier.rules.endpoint:/trust/v2/verificationRules}")
     private String rulesEndpoint;
 
     @Value("${verifier.api-key:}")
@@ -210,15 +212,32 @@ public class VerificationService {
                         .map(
                                 rule ->
                                         new Rule(
-                                                rule.getId(),
-                                                rule.getBusinessDescription(),
+                                                rule.getAffectedFields(),
+                                                rule.getCertificateType(),
+                                                rule.getCountry(),
                                                 rule.getDescription(),
-                                                rule.getInputParameter(),
-                                                rule.getLogic()))
+                                                rule.getEngine(),
+                                                rule.getEngineVersion(),
+                                                rule.getIdentifier(),
+                                                rule.getLogic(),
+                                                rule.getSchemaVersion(),
+                                                rule.getType(),
+                                                rule.getValidFrom(),
+                                                rule.getValidTo(),
+                                                rule.getVersion()))
                         .collect(Collectors.toList());
+        List<DisplayRule> displayRules =
+                intermediateRuleSet.getDisplayRules().stream()
+                        .map(rule -> new DisplayRule(rule.getId(), rule.getLogic()))
+                        .collect(Collectors.toList());
+
         logger.info("downloaded {} rules", rules.size());
+
         return new RuleSet(
-                rules, intermediateRuleSet.getValueSets(), intermediateRuleSet.getValidDuration());
+                displayRules,
+                rules,
+                intermediateRuleSet.getValueSets(),
+                intermediateRuleSet.getValidDuration());
     }
 
     private RequestEntity<Void> getRequestEntity(String endpoint, Map<String, String> params)
@@ -250,7 +269,9 @@ public class VerificationService {
         if (decodeState instanceof DecodeState.SUCCESS) {
             return ((DecodeState.SUCCESS) decodeState).getCertificateHolder();
         } else {
-            throw new DecodingException("Couldn't decode hcert: " + ((DecodeState.ERROR) decodeState).getError().getMessage());
+            throw new DecodingException(
+                    "Couldn't decode hcert: "
+                            + ((DecodeState.ERROR) decodeState).getError().getMessage());
         }
     }
 

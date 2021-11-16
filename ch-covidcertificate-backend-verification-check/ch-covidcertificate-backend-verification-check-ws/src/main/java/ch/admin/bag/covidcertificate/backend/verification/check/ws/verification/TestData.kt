@@ -25,18 +25,11 @@ object TestData {
             RevokedCertificates(revokedKeyIds, Long.MAX_VALUE),
             ruleSet ?: RuleSet(
                 emptyList(),
-                RuleValueSets(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    AcceptanceCriterias(0, 0, 0, 0, 0, 0)
-                ),
+                emptyList(),
+                emptyMap(),
                 0L
+                )
             )
-        )
     }
 
     // Note that this String (taken directly from a QR code) has some \ that escape $
