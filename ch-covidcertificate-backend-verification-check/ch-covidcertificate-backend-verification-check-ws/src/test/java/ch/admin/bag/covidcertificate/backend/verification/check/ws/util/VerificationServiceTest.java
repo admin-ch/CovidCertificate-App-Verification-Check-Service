@@ -2,7 +2,9 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.util;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+//import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +43,7 @@ class VerificationServiceTest {
     private static final HttpClient httpClient = HttpClient.newHttpClient();
     private static final String verifierBaseUrl = "verifier.test.ch";
     private static final String dscEndpoint = "/trust/v1/keys/updates";
-    private static final String rulesEndpoint = "/trust/v1/verificationRules";
+    private static final String rulesEndpoint = "/trust/v2/verificationRules";
     private static final String revocationEndpoint = "/trust/v2/revocationList";
     private static Map<String, String> etagMap = new HashMap<>();
     @Autowired ObjectMapper objectMapper;
@@ -70,20 +73,39 @@ class VerificationServiceTest {
         if (response.isBlank()) {
             logger.info("ETag hasn't changed - No need to update");
         } else {
-            final var rules = objectMapper.readValue(response, IntermediateRuleSet.class);
-            assertNotNull(rules);
-            List<Rule> rulesList = new ArrayList<>();
-            for (var rule : rules.getRules()) {
-                rulesList.add(
-                        new Rule(
-                                rule.getId(),
-                                rule.getBusinessDescription(),
-                                rule.getDescription(),
-                                rule.getInputParameter(),
-                                rule.getLogic()));
-            }
-            final var ruleSet =
-                    new RuleSet(rulesList, rules.getValueSets(), rules.getValidDuration());
+            final var intermediateRuleSet = objectMapper.readValue(response, IntermediateRuleSet.class);
+            assertNotNull(intermediateRuleSet);
+            List<Rule> rules =
+                    intermediateRuleSet.getRules().stream()
+                            .map(
+                                    rule ->
+                                            new Rule(
+                                                    rule.getAffectedFields(),
+                                                    rule.getCertificateType(),
+                                                    rule.getCountry(),
+                                                    rule.getDescription(),
+                                                    rule.getEngine(),
+                                                    rule.getEngineVersion(),
+                                                    rule.getIdentifier(),
+                                                    rule.getLogic(),
+                                                    rule.getSchemaVersion(),
+                                                    rule.getType(),
+                                                    rule.getValidFrom(),
+                                                    rule.getValidTo(),
+                                                    rule.getVersion()))
+                            .collect(Collectors.toList());
+            List<DisplayRule> displayRules =
+                    intermediateRuleSet.getDisplayRules().stream()
+                            .map(rule -> new DisplayRule(rule.getId(), rule.getLogic()))
+                            .collect(Collectors.toList());
+
+            logger.info("downloaded {} rules", rules.size());
+
+            final var ruleSet = new RuleSet(
+                    displayRules,
+                    rules,
+                    intermediateRuleSet.getValueSets(),
+                    intermediateRuleSet.getValidDuration());
             assertNotNull(ruleSet);
         }
     }

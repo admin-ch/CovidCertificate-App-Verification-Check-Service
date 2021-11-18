@@ -50,7 +50,8 @@ class LibWrapperTest {
     private static final Logger logger = LoggerFactory.getLogger(LibWrapperTest.class);
     private static CertificateVerifier certificateVerifier = new CertificateVerifier();
 
-    @Autowired ObjectMapper objectMapper;
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Test
     void decodeTest() {
