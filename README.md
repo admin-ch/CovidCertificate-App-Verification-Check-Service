@@ -24,7 +24,7 @@ Download and start the container by running
 docker run -p 8080:8080 -e APIKEY=<API obtained from BAG> adminch/covidcertificate-app-verification-check-service:latest
 ```
 
-The service is now exposed on port 8080 (change the first number in the `-p` argument to change the port).
+The service is now exposed on port 8080 (change the first number in the `-p` argument to change the port). By default, the service will connect to the `prod` environment, which should be used to verify actual certificates. For testing and development, add `-e ENV=dev` or `-e ENV=abn` to change to the respective environment.
 
 ### Verifying certificates
 
