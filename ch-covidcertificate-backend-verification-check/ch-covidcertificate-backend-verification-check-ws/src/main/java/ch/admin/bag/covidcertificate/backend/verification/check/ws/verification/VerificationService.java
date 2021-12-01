@@ -5,6 +5,8 @@ import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertF
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
 // import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository.RevokedCertificates;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
@@ -18,7 +20,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUC
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
@@ -91,9 +92,10 @@ public class VerificationService {
         try {
             logger.info("updating trust list config");
             Jwks jwks = getDSCs();
-            RevokedCertificates revokedCerts = getRevokedCerts();
+            RevokedCertificatesRepository revokedCerts = getRevokedCerts();
             RuleSet nationalRules = getNationalRules();
             this.trustListConfig.setTrustList(new TrustList(jwks, revokedCerts, nationalRules));
+            this.trustListConfig.setRevokedCertificatesRepository(revokedCerts);
             this.trustListConfig.setLastSync(Instant.now());
             logger.info("done updating trust list config");
         } catch (Exception e) {
@@ -158,13 +160,14 @@ public class VerificationService {
      *
      * @return RevokedCertificates object as required by the SDK-core
      */
-    private RevokedCertificates getRevokedCerts() throws URISyntaxException {
+    private RevokedCertificatesRepository getRevokedCerts() throws URISyntaxException {
         logger.info("Updating list of revoked certificates");
         Map<String, String> params = new HashMap<>();
         ResponseEntity<RevokedCertificates> response =
                 rt.exchange(
                         getRequestEntity(revocationEndpoint, params), RevokedCertificates.class);
         RevokedCertificates revokedCerts = response.getBody();
+        RevokedCertificatesRepository repo = new RevokedCertificatesRepository(revokedCerts);
         boolean done = upToDateHeaderIsTrue(response.getHeaders());
         int it = 1;
         while (!done && it < MAX_REQUESTS) {
@@ -176,7 +179,9 @@ public class VerificationService {
                         rt.exchange(
                                 getRequestEntity(revocationEndpoint, params),
                                 RevokedCertificates.class);
-                addRevokedCerts(revokedCerts, response.getBody());
+                if(response.getBody() != null) {
+                    repo.addCertificates(response.getBody().getRevokedCerts());
+                }
                 done = upToDateHeaderIsTrue(headers);
             } else { // fallback. exit loop if no next since header sent
                 done = true;
@@ -184,15 +189,8 @@ public class VerificationService {
 
             it++;
         }
-
         logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
-        return revokedCerts;
-    }
-
-    private void addRevokedCerts(RevokedCertificates revokedCerts, RevokedCertificates toAdd) {
-        if (revokedCerts != null && toAdd != null) {
-            revokedCerts.getRevokedCerts().addAll(toAdd.getRevokedCerts());
-        }
+        return repo;
     }
 
     /**
