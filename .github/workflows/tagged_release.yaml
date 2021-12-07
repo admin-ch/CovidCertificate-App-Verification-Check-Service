@@ -35,6 +35,11 @@ jobs:
         id: branch_name
         run: |
           echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+      - name: Add latest tag to list of Docker tags to push to
+        id: extra_tags
+        if: ${{ !contains(github.ref, 'prerelease') }}
+        run: |
+          echo ::set-output name=EXTRA_TAGS::",latest"
       - name: "Create new release"
         uses: marvinpinto/action-automatic-releases@919008cf3f741b179569b7a6fb4d8860689ab7f0
         with:
@@ -46,6 +51,7 @@ jobs:
       - name: Build and push docker
         env: 
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
+          EXTRA_TAGS:  ${{ steps.extra_tags.outputs.EXTRA_TAGS }}
           APP_NAME: covidcertificate-app-verification-check-service
         run: |
           mvn --batch-mode compile com.google.cloud.tools:jib-maven-plugin:3.1.4:build -f ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/pom.xml \
@@ -54,5 +60,5 @@ jobs:
           -Djib.to.auth.username=${{ secrets.DOCKER_HUB_USERNAME }} \
           -Djib.to.auth.password=${{ secrets.DOCKER_HUB }} \
           -Djib.container.volumes=/config/ \
-          -Djib.to.tags="${{ env.SOURCE_TAG}}",latest
+          -Djib.to.tags="${{ env.SOURCE_TAG}}${{ env.EXTRA_TAGS }}"
 
