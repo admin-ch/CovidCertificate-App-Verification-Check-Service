@@ -69,7 +69,7 @@ public class VerificationController {
         final var certificateHolder = verificationService.decodeHCert(hCertPayload);
 
         // Verify hcert
-        final var verificationState = verificationService.verifyDcc(certificateHolder);
+        final var verificationState = verificationService.verifyDccAllModes(certificateHolder);
 
         // Build response
         final var verificationResponse = new VerificationResponse();

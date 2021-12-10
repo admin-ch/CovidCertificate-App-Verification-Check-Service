@@ -8,6 +8,17 @@ public class TrustListConfig {
     private TrustList trustList;
     private Instant lastSync;
 
+    private RevokedCertificatesRepository revokedCertificatesRepository;
+
+    public RevokedCertificatesRepository getRevokedCertificatesRepository() {
+        return revokedCertificatesRepository;
+    }
+
+    public void setRevokedCertificatesRepository(
+            RevokedCertificatesRepository revokedCertificatesRepository) {
+        this.revokedCertificatesRepository = revokedCertificatesRepository;
+    }
+
     public TrustList getTrustList() {
         return trustList;
     }
@@ -27,7 +38,7 @@ public class TrustListConfig {
     public boolean isOutdated() {
         Instant now = Instant.now();
         return this.lastSync.isBefore(
-                        now.minusMillis(trustList.getRevokedCertificates().getValidDuration()))
+                        now.minusMillis(revokedCertificatesRepository.getValidDuration()))
                 || this.lastSync.isBefore(
                         now.minusMillis(trustList.getRuleSet().getValidDuration()));
     }

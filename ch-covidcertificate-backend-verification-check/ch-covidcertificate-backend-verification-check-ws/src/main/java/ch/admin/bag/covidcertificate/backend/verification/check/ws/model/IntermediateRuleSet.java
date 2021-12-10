@@ -1,6 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.model;
 
 //import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleValueSets;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Description;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +16,7 @@ public class IntermediateRuleSet {
     @NotNull private Map<String, String[]> valueSets;
     @NotNull private Long validDuration;
     @NotNull private List<DisplayRule> displayRules;
+    @NotNull private ModeRules modeRules;
 
     public List<Rule> getRules() {
         return rules;
@@ -49,6 +51,15 @@ public class IntermediateRuleSet {
         this.valueSets = valueSets;
     }
 
+    public ModeRules getModeRules() {
+        return modeRules;
+    }
+
+    public void setModeRules(
+            ModeRules modeRules) {
+        this.modeRules = modeRules;
+    }
+
     public static class Rule {
 
         private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -66,6 +77,7 @@ public class IntermediateRuleSet {
         public List<String> getAffectedFields() {
             return affectedFields;
         }
+
 
         public void setAffectedFields(List<String> affectedFields) {
             this.affectedFields = affectedFields;
@@ -197,6 +209,34 @@ public class IntermediateRuleSet {
             public void setLang(String lang) {
                 this.lang = lang;
             }
+        }
+    }
+
+    public static class ModeRules {
+        private static final ObjectMapper objectMapper = new ObjectMapper();
+        @NotNull private List<ActiveModes> activeModes;
+        @NotNull @JsonRawValue private Object logic;
+
+        public List<ActiveModes> getActiveModes() {
+            return activeModes;
+        }
+
+        public void setActiveModes(
+                List<ActiveModes> activeModes) {
+            this.activeModes = activeModes;
+        }
+
+        @JsonRawValue
+        public String getLogic() {
+            try {
+                return logic == null ? null : objectMapper.writeValueAsString(logic);
+            } catch (JsonProcessingException e) {
+                return null;
+            }
+        }
+
+        public void setLogic(Object logic) {
+            this.logic = logic;
         }
     }
 

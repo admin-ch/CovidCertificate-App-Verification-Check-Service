@@ -22,10 +22,21 @@ object TestData {
     ): TrustList {
         return TrustList(
             Jwks(signingKeys),
-            RevokedCertificates(revokedKeyIds, Long.MAX_VALUE),
+            object: RevokedCertificatesStore{
+                val certs = ArrayList<String>(revokedKeyIds);
+                override fun addCertificates(certificates: List<String>) {
+                    certs.addAll(certificates)
+                }
+
+                override fun containsCertificate(certificate: String): Boolean {
+                    return certs.contains(certificate)
+                }
+            },
+
             ruleSet ?: RuleSet(
                 emptyList(),
                 emptyList(),
+                ModeRules(emptyList(), ""),
                 emptyMap(),
                 0L
                 )

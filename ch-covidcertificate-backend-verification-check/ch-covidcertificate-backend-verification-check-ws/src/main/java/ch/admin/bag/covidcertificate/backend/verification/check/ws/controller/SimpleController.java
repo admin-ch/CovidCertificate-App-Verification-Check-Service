@@ -1,6 +1,7 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
+import ch.admin.bag.covidcertificate.backend.verification.check.model.SimpleControllerPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.SimpleVerificationResponse;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.VerificationService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -44,15 +46,18 @@ public class SimpleController {
             })
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @PostMapping("/verify")
-    public @ResponseBody SimpleVerificationResponse verify(@RequestBody HCertPayload hCertPayload) {
+    public @ResponseBody SimpleVerificationResponse verify(@RequestBody SimpleControllerPayload hCertPayload) {
+        String verificationMode = hCertPayload.getMode();
         final var start = Instant.now();
+
         // Decode hcert
         logger.info("Decoding hcert");
         final var certificateHolder = verificationService.decodeHCert(hCertPayload);
 
         logger.info("Verifying hcert");
         // Verify hcert
-        final var verificationState = verificationService.verifyDcc(certificateHolder);
+        final var verificationState = verificationService.verifyDccSingleMode(certificateHolder,
+                verificationMode);
 
         // Build response
         final var simpleVerificationResponse =
