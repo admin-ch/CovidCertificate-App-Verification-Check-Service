@@ -18,6 +18,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
@@ -345,5 +346,9 @@ public class VerificationService {
                 new CheckNationalRulesState.INVALID(
                         NationalRulesError.UNKNOWN_RULE_FAILED, TRUST_LIST_OUTDATED),
                 null);
+    }
+
+    public List<ActiveModes> getVerificationModes(){
+        return trustListConfig.getTrustList().getRuleSet().getModeRules().getActiveModes();
     }
 }

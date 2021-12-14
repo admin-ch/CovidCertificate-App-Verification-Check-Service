@@ -8,8 +8,11 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.verification.
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
 import ch.ubique.openapi.docannotations.Documentation;
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -76,7 +80,18 @@ public class SimpleController {
         return simpleVerificationResponse;
     }
 
-    @ExceptionHandler(DecodingException.class)
+    @Documentation(
+            description = "Get currently valid verification modes"
+    )
+    @CrossOrigin(origins = {"https://editor.swagger.io"})
+    @GetMapping("/modes")
+    public @ResponseBody List<String> getVerificationModes() {
+        return verificationService.getVerificationModes().stream().map(ActiveModes::getId).collect(
+                Collectors.toList());
+    }
+
+
+        @ExceptionHandler(DecodingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> invalidHCert(DecodingException e) {
         logger.info("Decoding exception thrown: {}", e.getMessage());
