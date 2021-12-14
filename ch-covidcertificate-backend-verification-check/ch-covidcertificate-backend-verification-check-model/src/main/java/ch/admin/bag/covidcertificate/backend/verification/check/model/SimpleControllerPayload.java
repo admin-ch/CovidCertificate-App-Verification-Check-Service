@@ -1,6 +1,5 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.model;
 
-import ch.ubique.openapi.docannotations.Documentation;
 import javax.validation.constraints.NotNull;
 
 public class SimpleControllerPayload extends HCertPayload {

@@ -1,8 +1,6 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.model;
 
-//import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleValueSets;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Description;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

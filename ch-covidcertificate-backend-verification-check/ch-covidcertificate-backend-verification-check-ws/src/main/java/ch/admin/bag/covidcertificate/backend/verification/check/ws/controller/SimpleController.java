@@ -1,6 +1,5 @@
 package ch.admin.bag.covidcertificate.backend.verification.check.ws.controller;
 
-import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.SimpleControllerPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.SimpleVerificationResponse;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -15,7 +15,7 @@ object VerifyWrapper {
             certificateHolder: CertificateHolder,
             trustList: TrustList
     ): VerificationState = runBlocking {
-        certificateVerifier.verify(certificateHolder, trustList, trustList.ruleSet.modeRules.activeModes.map { it -> it.id }.toSet(), VerificationType.WALLET)
+        certificateVerifier.verify(certificateHolder, trustList, trustList.ruleSet.modeRules.activeModes.map { it.id }.toSet(), VerificationType.WALLET)
     }
 
     @JvmStatic

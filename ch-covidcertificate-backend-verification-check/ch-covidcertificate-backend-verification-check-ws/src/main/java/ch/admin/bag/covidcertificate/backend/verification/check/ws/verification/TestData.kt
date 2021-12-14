@@ -22,8 +22,8 @@ object TestData {
     ): TrustList {
         return TrustList(
             Jwks(signingKeys),
-            object: RevokedCertificatesStore{
-                val certs = ArrayList<String>(revokedKeyIds);
+            object : RevokedCertificatesStore {
+                val certs = ArrayList<String>(revokedKeyIds)
                 override fun addCertificates(certificates: List<String>) {
                     certs.addAll(certificates)
                 }
@@ -39,8 +39,8 @@ object TestData {
                 ModeRules(emptyList(), ""),
                 emptyMap(),
                 0L
-                )
             )
+        )
     }
 
     // Note that this String (taken directly from a QR code) has some \ that escape $

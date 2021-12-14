@@ -3,7 +3,6 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
-// import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet.ModeRules;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository;
