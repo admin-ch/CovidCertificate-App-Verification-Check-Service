@@ -90,7 +90,7 @@ class LibWrapperTest {
                 TestData.createTrustList(
                         TestData.getHardcodedSigningKeys("abn"), Collections.emptyList(), null);
         VerificationState verificationState =
-                VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
+                VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
         assertTrue(verificationState instanceof INVALID);
         assertTrue(
                 ((INVALID) verificationState).getSignatureState()
@@ -106,7 +106,7 @@ class LibWrapperTest {
         trustList =
                 TestData.createTrustList(
                         TestData.getHardcodedSigningKeys("dev"), Collections.emptyList(), null);
-        verificationState = VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
+        verificationState = VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
         assertTrue(verificationState instanceof INVALID);
         assertTrue(
                 ((INVALID) verificationState).getSignatureState()

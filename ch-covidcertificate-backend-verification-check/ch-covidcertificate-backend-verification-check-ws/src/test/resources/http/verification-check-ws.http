@@ -12,3 +12,4 @@ Content-Type: application/json
 
 ###
 
+GET {{baseUrl}}/v1/modes

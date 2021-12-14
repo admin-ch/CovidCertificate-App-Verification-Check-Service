@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 //import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet.ModeRules;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
@@ -16,7 +17,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,10 +100,13 @@ class VerificationServiceTest {
                             .collect(Collectors.toList());
 
             logger.info("downloaded {} rules", rules.size());
-
-            final var ruleSet = new RuleSet(
+            ModeRules intermediateModeRules = intermediateRuleSet.getModeRules();
+            ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getLogic());
+            logger.info("downloaded {} rules", rules.size());
+            RuleSet ruleSet = new RuleSet(
                     displayRules,
                     rules,
+                    sdkModeRules,
                     intermediateRuleSet.getValueSets(),
                     intermediateRuleSet.getValidDuration());
             assertNotNull(ruleSet);

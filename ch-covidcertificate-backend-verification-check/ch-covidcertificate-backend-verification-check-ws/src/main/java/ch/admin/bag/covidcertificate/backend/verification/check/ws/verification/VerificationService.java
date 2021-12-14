@@ -3,8 +3,10 @@ package ch.admin.bag.covidcertificate.backend.verification.check.ws.verification
 import ch.admin.bag.covidcertificate.backend.verification.check.model.HCertPayload;
 import ch.admin.bag.covidcertificate.backend.verification.check.model.cert.CertFormat;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.DecodingException;
-// import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.IntermediateRuleSet.ModeRules;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository;
+import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository.RevokedCertificates;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
@@ -15,10 +17,10 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwk;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks;
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Rule;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList;
@@ -57,6 +59,7 @@ public class VerificationService {
     private static final String UP_TO_PARAM = "upTo";
 
     private static final int MAX_REQUESTS = 1000;
+    public static final String TRUST_LIST_OUTDATED = "TRUST_LIST_OUTDATED";
 
     private final TrustListConfig trustListConfig = new TrustListConfig();
     private final CertificateVerifier certificateVerifier = new CertificateVerifier();
@@ -91,9 +94,10 @@ public class VerificationService {
         try {
             logger.info("updating trust list config");
             Jwks jwks = getDSCs();
-            RevokedCertificates revokedCerts = getRevokedCerts();
+            RevokedCertificatesRepository revokedCerts = getRevokedCerts();
             RuleSet nationalRules = getNationalRules();
             this.trustListConfig.setTrustList(new TrustList(jwks, revokedCerts, nationalRules));
+            this.trustListConfig.setRevokedCertificatesRepository(revokedCerts);
             this.trustListConfig.setLastSync(Instant.now());
             logger.info("done updating trust list config");
         } catch (Exception e) {
@@ -114,9 +118,12 @@ public class VerificationService {
         boolean done = false;
         int it = 0;
         do {
-            ResponseEntity<Jwks> response =
+            final ResponseEntity<Jwks> response =
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
-            jwkList.addAll(response.getBody().getCerts());
+            var body = response.getBody();
+            if(body != null){
+                jwkList.addAll(body.getCerts());
+            }
 
             HttpHeaders headers = response.getHeaders();
             List<String> nextSince = headers.get(NEXT_SINCE_HEADER);
@@ -158,13 +165,18 @@ public class VerificationService {
      *
      * @return RevokedCertificates object as required by the SDK-core
      */
-    private RevokedCertificates getRevokedCerts() throws URISyntaxException {
+    private RevokedCertificatesRepository getRevokedCerts() throws URISyntaxException {
         logger.info("Updating list of revoked certificates");
         Map<String, String> params = new HashMap<>();
         ResponseEntity<RevokedCertificates> response =
                 rt.exchange(
                         getRequestEntity(revocationEndpoint, params), RevokedCertificates.class);
         RevokedCertificates revokedCerts = response.getBody();
+        if(revokedCerts == null){
+            logger.error("Failed to get revoked certificates");
+            throw new NullPointerException("Failed to get revoked certificates");
+        }
+        RevokedCertificatesRepository repo = new RevokedCertificatesRepository(revokedCerts);
         boolean done = upToDateHeaderIsTrue(response.getHeaders());
         int it = 1;
         while (!done && it < MAX_REQUESTS) {
@@ -176,7 +188,14 @@ public class VerificationService {
                         rt.exchange(
                                 getRequestEntity(revocationEndpoint, params),
                                 RevokedCertificates.class);
-                addRevokedCerts(revokedCerts, response.getBody());
+                if(response.getBody() != null) {
+                    var body = response.getBody();
+                    if(body != null){
+                        repo.addCertificates(body.getRevokedCerts());
+                    }else{
+                        logger.error("Failed to fetch some of the revoked certificates");
+                    }
+                }
                 done = upToDateHeaderIsTrue(headers);
             } else { // fallback. exit loop if no next since header sent
                 done = true;
@@ -184,15 +203,9 @@ public class VerificationService {
 
             it++;
         }
+            logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
 
-        logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
-        return revokedCerts;
-    }
-
-    private void addRevokedCerts(RevokedCertificates revokedCerts, RevokedCertificates toAdd) {
-        if (revokedCerts != null && toAdd != null) {
-            revokedCerts.getRevokedCerts().addAll(toAdd.getRevokedCerts());
-        }
+        return repo;
     }
 
     /**
@@ -207,6 +220,10 @@ public class VerificationService {
                                 getRequestEntity(rulesEndpoint, new HashMap<>()),
                                 IntermediateRuleSet.class)
                         .getBody();
+        if(intermediateRuleSet == null){
+            logger.error("Failed to fetch national rules");
+            throw new NullPointerException("intermediateRuleSet is null");
+        }
         List<Rule> rules =
                 intermediateRuleSet.getRules().stream()
                         .map(
@@ -230,12 +247,14 @@ public class VerificationService {
                 intermediateRuleSet.getDisplayRules().stream()
                         .map(rule -> new DisplayRule(rule.getId(), rule.getLogic()))
                         .collect(Collectors.toList());
-
+        ModeRules intermediateModeRules = intermediateRuleSet.getModeRules();
+        ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getLogic());
         logger.info("downloaded {} rules", rules.size());
 
         return new RuleSet(
                 displayRules,
                 rules,
+                sdkModeRules,
                 intermediateRuleSet.getValueSets(),
                 intermediateRuleSet.getValidDuration());
     }
@@ -275,10 +294,19 @@ public class VerificationService {
         }
     }
 
-    public VerificationState verifyDcc(CertificateHolder certificateHolder) {
+    public VerificationState verifyDccAllModes(CertificateHolder certificateHolder) {
         TrustList trustList = trustListConfig.getTrustList();
         VerificationState state =
-                VerifyWrapper.verify(certificateVerifier, certificateHolder, trustList);
+                VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
+        return !trustListConfig.isOutdated() || state instanceof VerificationState.ERROR
+                ? state
+                : getOutdatedTrustListState(state);
+    }
+
+    public VerificationState verifyDccSingleMode(CertificateHolder certificateHolder, String mode){
+        TrustList trustList = trustListConfig.getTrustList();
+        VerificationState state =
+                VerifyWrapper.verifyVerifier(certificateVerifier, certificateHolder, trustList, mode);
         return !trustListConfig.isOutdated() || state instanceof VerificationState.ERROR
                 ? state
                 : getOutdatedTrustListState(state);
@@ -305,7 +333,7 @@ public class VerificationService {
             if (originalState instanceof VerificationState.INVALID) {
                 signatureState = ((VerificationState.INVALID) originalState).getSignatureState();
             } else {
-                signatureState = new CheckSignatureState.INVALID("TRUST_LIST_OUTDATED");
+                signatureState = new CheckSignatureState.INVALID(TRUST_LIST_OUTDATED);
             }
         } else {
             signatureState = CheckSignatureState.SUCCESS.INSTANCE;
@@ -313,9 +341,13 @@ public class VerificationService {
 
         return new VerificationState.INVALID(
                 signatureState,
-                new CheckRevocationState.INVALID("TRUST_LIST_OUTDATED"),
+                new CheckRevocationState.INVALID(TRUST_LIST_OUTDATED),
                 new CheckNationalRulesState.INVALID(
-                        NationalRulesError.UNKNOWN_RULE_FAILED, "TRUST_LIST_OUTDATED"),
+                        NationalRulesError.UNKNOWN_RULE_FAILED, TRUST_LIST_OUTDATED),
                 null);
+    }
+
+    public List<ActiveModes> getVerificationModes(){
+        return trustListConfig.getTrustList().getRuleSet().getModeRules().getActiveModes();
     }
 }
