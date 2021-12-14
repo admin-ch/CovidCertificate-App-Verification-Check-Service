@@ -18,13 +18,13 @@
 
     <properties>
         <java-version>11</java-version>
-        <kotlin.version>1.4.32</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring-boot-version>2.5.3</spring-boot-version>
-        <spring-cloud-sleuth-version>3.0.3</spring-cloud-sleuth-version>
+        <spring-boot-version>2.6.1</spring-boot-version>
+        <spring-cloud-sleuth-version>3.1.0</spring-cloud-sleuth-version>
         <jackson-version>2.11.1</jackson-version>
         <spring-cloud-connectors-version>2.0.7.RELEASE</spring-cloud-connectors-version>
 
