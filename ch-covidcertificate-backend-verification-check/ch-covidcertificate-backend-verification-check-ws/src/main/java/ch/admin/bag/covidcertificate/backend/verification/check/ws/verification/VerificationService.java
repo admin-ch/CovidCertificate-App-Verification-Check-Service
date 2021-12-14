@@ -59,6 +59,7 @@ public class VerificationService {
     private static final String UP_TO_PARAM = "upTo";
 
     private static final int MAX_REQUESTS = 1000;
+    public static final String TRUST_LIST_OUTDATED = "TRUST_LIST_OUTDATED";
 
     private final TrustListConfig trustListConfig = new TrustListConfig();
     private final CertificateVerifier certificateVerifier = new CertificateVerifier();
@@ -117,9 +118,12 @@ public class VerificationService {
         boolean done = false;
         int it = 0;
         do {
-            ResponseEntity<Jwks> response =
+            final ResponseEntity<Jwks> response =
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
-            jwkList.addAll(response.getBody().getCerts());
+            var body = response.getBody();
+            if(body != null){
+                jwkList.addAll(body.getCerts());
+            }
 
             HttpHeaders headers = response.getHeaders();
             List<String> nextSince = headers.get(NEXT_SINCE_HEADER);
@@ -168,6 +172,10 @@ public class VerificationService {
                 rt.exchange(
                         getRequestEntity(revocationEndpoint, params), RevokedCertificates.class);
         RevokedCertificates revokedCerts = response.getBody();
+        if(revokedCerts == null){
+            logger.error("Failed to get revoked certificates");
+            throw new NullPointerException("Failed to get revoked certificates");
+        }
         RevokedCertificatesRepository repo = new RevokedCertificatesRepository(revokedCerts);
         boolean done = upToDateHeaderIsTrue(response.getHeaders());
         int it = 1;
@@ -181,7 +189,12 @@ public class VerificationService {
                                 getRequestEntity(revocationEndpoint, params),
                                 RevokedCertificates.class);
                 if(response.getBody() != null) {
-                    repo.addCertificates(response.getBody().getRevokedCerts());
+                    var body = response.getBody();
+                    if(body != null){
+                        repo.addCertificates(body.getRevokedCerts());
+                    }else{
+                        logger.error("Failed to fetch some of the revoked certificates");
+                    }
                 }
                 done = upToDateHeaderIsTrue(headers);
             } else { // fallback. exit loop if no next since header sent
@@ -190,7 +203,8 @@ public class VerificationService {
 
             it++;
         }
-        logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
+            logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
+
         return repo;
     }
 
@@ -206,6 +220,10 @@ public class VerificationService {
                                 getRequestEntity(rulesEndpoint, new HashMap<>()),
                                 IntermediateRuleSet.class)
                         .getBody();
+        if(intermediateRuleSet == null){
+            logger.error("Failed to fetch national rules");
+            throw new NullPointerException("intermediateRuleSet is null");
+        }
         List<Rule> rules =
                 intermediateRuleSet.getRules().stream()
                         .map(
@@ -315,7 +333,7 @@ public class VerificationService {
             if (originalState instanceof VerificationState.INVALID) {
                 signatureState = ((VerificationState.INVALID) originalState).getSignatureState();
             } else {
-                signatureState = new CheckSignatureState.INVALID("TRUST_LIST_OUTDATED");
+                signatureState = new CheckSignatureState.INVALID(TRUST_LIST_OUTDATED);
             }
         } else {
             signatureState = CheckSignatureState.SUCCESS.INSTANCE;
@@ -323,9 +341,9 @@ public class VerificationService {
 
         return new VerificationState.INVALID(
                 signatureState,
-                new CheckRevocationState.INVALID("TRUST_LIST_OUTDATED"),
+                new CheckRevocationState.INVALID(TRUST_LIST_OUTDATED),
                 new CheckNationalRulesState.INVALID(
-                        NationalRulesError.UNKNOWN_RULE_FAILED, "TRUST_LIST_OUTDATED"),
+                        NationalRulesError.UNKNOWN_RULE_FAILED, TRUST_LIST_OUTDATED),
                 null);
     }
 }
