@@ -248,7 +248,7 @@ public class VerificationService {
                         .map(rule -> new DisplayRule(rule.getId(), rule.getLogic()))
                         .collect(Collectors.toList());
         ModeRules intermediateModeRules = intermediateRuleSet.getModeRules();
-        ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getLogic());
+        ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getVerifierActiveModes(), intermediateModeRules.getLogic());
         logger.info("downloaded {} rules", rules.size());
 
         return new RuleSet(
@@ -347,7 +347,12 @@ public class VerificationService {
                 null);
     }
 
-    public List<ActiveModes> getVerificationModes(){
+    public List<ActiveModes> getWalletVerificationModes(){
         return trustListConfig.getTrustList().getRuleSet().getModeRules().getActiveModes();
     }
+
+    public List<ActiveModes> getVerifierVerificationModes(){
+        return trustListConfig.getTrustList().getRuleSet().getModeRules().getVerifierActiveModes();
+    }
+
 }
