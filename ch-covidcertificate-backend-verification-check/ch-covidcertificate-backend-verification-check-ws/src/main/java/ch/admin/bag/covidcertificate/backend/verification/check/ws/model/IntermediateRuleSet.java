@@ -213,7 +213,9 @@ public class IntermediateRuleSet {
     public static class ModeRules {
         private static final ObjectMapper objectMapper = new ObjectMapper();
         @NotNull private List<ActiveModes> activeModes;
+        @NotNull private List<ActiveModes> verifierActiveModes;
         @NotNull @JsonRawValue private Object logic;
+
 
         public List<ActiveModes> getActiveModes() {
             return activeModes;
@@ -222,6 +224,15 @@ public class IntermediateRuleSet {
         public void setActiveModes(
                 List<ActiveModes> activeModes) {
             this.activeModes = activeModes;
+        }
+
+        public List<ActiveModes> getVerifierActiveModes() {
+            return verifierActiveModes;
+        }
+
+        public void setVerifierActiveModes(
+                List<ActiveModes> verifierActiveModes) {
+            this.verifierActiveModes = verifierActiveModes;
         }
 
         @JsonRawValue

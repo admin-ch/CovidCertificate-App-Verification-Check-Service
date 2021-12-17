@@ -84,7 +84,7 @@ public class SimpleController {
     @CrossOrigin(origins = {"https://editor.swagger.io"})
     @GetMapping("/modes")
     public @ResponseBody List<String> getVerificationModes() {
-        return verificationService.getVerificationModes().stream().map(ActiveModes::getId).collect(
+        return verificationService.getVerifierVerificationModes().stream().map(ActiveModes::getId).collect(
                 Collectors.toList());
     }
 
