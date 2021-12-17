@@ -40,7 +40,9 @@ The `mode` field must be one of the currently valid verification modes. A list o
 ```json
 [
   "THREE_G",
-  "TWO_G"
+  "TWO_G",
+  "TWO_G_PLUS",
+  "TEST_CERT"
 ]
 ```
 
@@ -69,8 +71,14 @@ where only one of the three fields `successState`, `errorState`, `invalidState` 
 | Value        | Meaning                                            |
 |--------------|----------------------------------------------------|
 | SUCCESS      | The certificate fulfills all criteria of this mode |
+| SUCCESS_2G   | The certificate fulfills the 2G part of 2G+ (i.e. vaccine/recovery) |
+| SUCCESS_2G_PLUS | The certificate fulfills the plus part of 2G+ (i.e. test) |
+| IS_LIGHT     | The certificate is a light certificate which is not valid in this mode |
 | INVALID      | The certificate is not valid under this mode       |
 | UNKNOWN_MODE | An invalid verification mode was specified         |
+
+Note that in modes requiring multiple certificates (currently 2G+), each certificate needs to be verified separately and it is the client's responsibility to keep track of which certificates have been verified.
+
 
 <details>
   <summary>Examples</summary>
