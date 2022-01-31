@@ -50,6 +50,9 @@ public class SimpleController {
     @PostMapping("/verify")
     public @ResponseBody SimpleVerificationResponse verify(@RequestBody SimpleControllerPayload hCertPayload) {
         String verificationMode = hCertPayload.getMode();
+        if(!getVerificationModes().contains(verificationMode)){
+            throw new IllegalArgumentException("Invalid or no verification mode provided. Query /modes for currently available modes");
+        }
         final var start = Instant.now();
 
         // Decode hcert
@@ -89,10 +92,20 @@ public class SimpleController {
     }
 
 
-        @ExceptionHandler(DecodingException.class)
+    @ExceptionHandler(DecodingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> invalidHCert(DecodingException e) {
         logger.info("Decoding exception thrown: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMsg());
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> invalidMode(IllegalArgumentException e) {
+        logger.info("IllegalArgumentException thrown: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+
 }
+
