@@ -214,6 +214,7 @@ public class IntermediateRuleSet {
         private static final ObjectMapper objectMapper = new ObjectMapper();
         @NotNull private List<ActiveModes> activeModes;
         @NotNull private List<ActiveModes> verifierActiveModes;
+        @NotNull private List<ActiveModes> walletActiveModes;
         @NotNull @JsonRawValue private Object logic;
 
 
@@ -246,6 +247,15 @@ public class IntermediateRuleSet {
 
         public void setLogic(Object logic) {
             this.logic = logic;
+        }
+
+        public List<ActiveModes> getWalletActiveModes() {
+            return walletActiveModes;
+        }
+
+        public void setWalletActiveModes(
+                List<ActiveModes> walletActiveModes) {
+            this.walletActiveModes = walletActiveModes;
         }
     }
 
