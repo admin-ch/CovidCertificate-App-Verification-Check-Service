@@ -36,7 +36,7 @@ object TestData {
             ruleSet ?: RuleSet(
                 emptyList(),
                 emptyList(),
-                ModeRules(emptyList(), emptyList(), ""),
+                ModeRules(emptyList(), emptyList(), emptyList(), ""),
                 emptyMap(),
                 0L
             )

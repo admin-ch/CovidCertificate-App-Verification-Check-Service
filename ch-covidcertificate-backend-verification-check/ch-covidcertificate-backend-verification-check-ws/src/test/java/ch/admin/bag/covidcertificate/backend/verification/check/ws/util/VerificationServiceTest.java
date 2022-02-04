@@ -101,7 +101,7 @@ class VerificationServiceTest {
 
             logger.info("downloaded {} rules", rules.size());
             ModeRules intermediateModeRules = intermediateRuleSet.getModeRules();
-            ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getVerifierActiveModes(), intermediateModeRules.getLogic());
+            ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getWalletActiveModes(), intermediateModeRules.getVerifierActiveModes(), intermediateModeRules.getLogic());
             logger.info("downloaded {} rules", rules.size());
             RuleSet ruleSet = new RuleSet(
                     displayRules,
