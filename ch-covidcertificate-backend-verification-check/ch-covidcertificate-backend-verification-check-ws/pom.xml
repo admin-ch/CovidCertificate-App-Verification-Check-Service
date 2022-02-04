@@ -74,7 +74,7 @@
         <dependency>
             <groupId>ch.admin.bag.covidcertificate</groupId>
             <artifactId>sdk-core</artifactId>
-            <version>3.0.4-dev-41</version>
+            <version>3.0.4</version>
         </dependency>
 
         <dependency>
