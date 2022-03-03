@@ -8,7 +8,17 @@
   "packageRules": [
     {
       "matchPackagePatterns": ["*"],
-      "groupName": "dependencies"
+      "groupName": "dependencies",
+      "excludePackageNames": ["ch.admin.bag.covidcertificate:sdk-core"]
+    },
+    {
+      "matchPackageNames": ["ch.admin.bag.covidcertificate:sdk-core"],
+      "allowedVersions": "!/.*-dev-.*/",
+      "groupName": "core-sdk"
+    },
+    {
+      "matchPackageNames": ["org.jetbrains.kotlinx:kotlinx-coroutines-core"],
+      "allowedVersions": "!/.*-native-mt$/"
     }
   ],
   "schedule": [
