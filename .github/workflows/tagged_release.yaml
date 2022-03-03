@@ -41,7 +41,7 @@ jobs:
         run: |
           echo ::set-output name=EXTRA_TAGS::",latest"
       - name: "Create new release"
-        uses: marvinpinto/action-automatic-releases@919008cf3f741b179569b7a6fb4d8860689ab7f0
+        uses: marvinpinto/action-automatic-releases@d68defdd11f9dcc7f52f35c1b7c236ee7513bcc1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: ${{ contains(github.ref, 'prerelease') }}
