@@ -18,12 +18,12 @@
 
     <properties>
         <java-version>11</java-version>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.6.20</kotlin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring-boot-version>2.6.4</spring-boot-version>
+        <spring-boot-version>2.6.6</spring-boot-version>
         <spring-cloud-sleuth-version>3.1.1</spring-cloud-sleuth-version>
         <jackson-version>2.11.1</jackson-version>
         <spring-cloud-connectors-version>2.2.13.RELEASE</spring-cloud-connectors-version>
@@ -197,7 +197,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.10.0</version>
+                    <version>3.10.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
