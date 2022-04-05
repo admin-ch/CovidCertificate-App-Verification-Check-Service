@@ -18,7 +18,7 @@
 
     <properties>
         <java-version>11</java-version>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.6.20</kotlin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -197,7 +197,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.10.0</version>
+                    <version>3.10.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
