@@ -252,11 +252,11 @@ public class VerificationService {
         logger.info("downloaded {} rules", rules.size());
 
         return new RuleSet(
-                displayRules,
                 rules,
-                sdkModeRules,
                 intermediateRuleSet.getValueSets(),
-                intermediateRuleSet.getValidDuration());
+                intermediateRuleSet.getValidDuration(),
+                displayRules,
+                sdkModeRules);
     }
 
     private RequestEntity<Void> getRequestEntity(String endpoint, Map<String, String> params)
@@ -343,7 +343,7 @@ public class VerificationService {
                 signatureState,
                 new CheckRevocationState.INVALID(TRUST_LIST_OUTDATED),
                 new CheckNationalRulesState.INVALID(
-                        NationalRulesError.UNKNOWN_RULE_FAILED, TRUST_LIST_OUTDATED),
+                        NationalRulesError.UNKNOWN_RULE_FAILED, false, TRUST_LIST_OUTDATED),
                 null);
     }
 
