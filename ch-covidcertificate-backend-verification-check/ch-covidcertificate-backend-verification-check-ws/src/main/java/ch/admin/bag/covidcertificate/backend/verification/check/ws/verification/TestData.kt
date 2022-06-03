@@ -138,9 +138,9 @@ object TestData {
     private const val LIGHT_TEST_Y = "g9ufnhfjFLVIiQYeQWmQATN/CMiVbfAgFp/08+Qqv2s="
 
     /* Switzerland's public keys */
-    private const val CH_DEV_KID = "mmrfzpMU6xc="
+    private const val CH_DEV_KID = "Ov9pjL/TkIw="
     private const val CH_DEV_N =
-        "AOLmTuP+7Z3md1w+TgIk8qADTqIUGQvg82eGAtAKC5xDvmdz3E4mpQrkSktcx37ozTyNBhhtPQ0VVV3b/rXCjVxQ7f50VNc5VgxhX+P+t5eUSI5FhQ9yRSqkfCJXCY62GMbLbmbNzGst0hkCfpGWnh+RhWTEbxNMGh6jMW38GpL43/KsgVwq2dVrCvlyX+4mGyUtnTtWuR53oMT7kQO2c/IpDu0Ec5kqJ4KjpZHoxGiJBY8e4Cxk1LDqwT2GubHWaopw8Jp47Soudhy1mqzF7PrdTDeHrSKexhO/82q4wTcZNRH4osJfkXXMCdrlcH64M8X79/03pGRfCFMpFdhnrt0="
+        "AMDOmdgTEhMBAcf1VoLqI3yDmh4fZtinoXHFz+M0UuDto8C0eLZwuP76Cmd4zevoe4h7Kvx/h3RtEsoJKliYfa7dqkDJtLprv+h1VxKDJj6/51W+gjmnt2qO6ShWHyR2Gd+ta+pL4G20fMCs7FqFUl55CmXTRu8NP9dE38D/m33FWbEgROHIdcE7ceb2ysHQzwyCChN1Z9rsiCGj/X6RKcbDSODTc89QrMXEsNqYzV5aikhLr8hBdwGVJt//j1j0sI3kn0hCKnPz6AVufSbPKMoD7qhLFmzIPQOOH+85hHp/uIte/UqfIOwsQDCBrf8Fs4u/kXWJ9sNOcvWQQOPAJpc="
     private const val CH_DEV_E = "AQAB"
 
     private const val CH_ABN_KID = "JLxre3vSwyg="
