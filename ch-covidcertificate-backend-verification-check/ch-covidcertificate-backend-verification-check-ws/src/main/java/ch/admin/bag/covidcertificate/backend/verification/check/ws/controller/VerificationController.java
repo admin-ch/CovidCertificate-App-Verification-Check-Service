@@ -84,6 +84,31 @@ public class VerificationController {
         return verificationResponse;
     }
 
+    @Documentation(
+            description = "Verify whether a certificate is eligible for renewal"
+    )
+    @PostMapping(path = {"/verifyRenewal"})
+    public @ResponseBody VerificationResponse verifyRenewal(
+            @RequestBody HCertPayload hCertPayload){
+        // Decode hcert
+        final var certificateHolder = verificationService.decodeHCert(hCertPayload);
+
+        // Verify hcert
+        final var verificationState = verificationService.verifyDccForRenewal(certificateHolder);
+
+        // Build response
+        final var verificationResponse = new VerificationResponse();
+        verificationResponse.setHcertDecoded(certificateHolder);
+        if (verificationState instanceof VerificationState.SUCCESS) {
+            verificationResponse.setSuccessState((VerificationState.SUCCESS) verificationState);
+        } else if (verificationState instanceof ERROR) {
+            verificationResponse.setErrorState((ERROR) verificationState);
+        } else {
+            verificationResponse.setInvalidState((INVALID) verificationState);
+        }
+        return verificationResponse;
+    }
+
     @ExceptionHandler(DecodingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> invalidHCert(DecodingException e) {

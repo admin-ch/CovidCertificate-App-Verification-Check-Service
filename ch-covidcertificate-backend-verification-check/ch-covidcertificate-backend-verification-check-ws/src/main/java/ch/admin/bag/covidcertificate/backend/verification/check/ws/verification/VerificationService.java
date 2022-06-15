@@ -8,12 +8,16 @@ import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.Interme
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.RevokedCertificatesRepository.RevokedCertificates;
 import ch.admin.bag.covidcertificate.backend.verification.check.ws.model.TrustListConfig;
+import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes;
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder;
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidity;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidityState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.SuccessState.VerifierSuccessState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
@@ -66,6 +70,8 @@ public class VerificationService {
 
     private final RestTemplate rt;
 
+    private final VerificationState DUMMY_SUCCESS_STATE = new VerificationState.SUCCESS(new VerifierSuccessState(new ModeValidity("", ModeValidityState.UNKNOWN)), false);
+
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
 
@@ -93,12 +99,14 @@ public class VerificationService {
     public void updateTrustListConfig() {
         try {
             logger.info("updating trust list config");
-            Jwks jwks = getDSCs();
+            Jwks jwks = getDSCs(null);
+            Jwks jwksCh = getDSCs("CH");
             RevokedCertificatesRepository revokedCerts = getRevokedCerts();
             RuleSet nationalRules = getNationalRules();
             this.trustListConfig.setTrustList(new TrustList(jwks, revokedCerts, nationalRules));
             this.trustListConfig.setRevokedCertificatesRepository(revokedCerts);
             this.trustListConfig.setLastSync(Instant.now());
+            this.trustListConfig.setRenewalTrustList(new TrustList(jwksCh, revokedCerts, nationalRules));
             logger.info("done updating trust list config");
         } catch (Exception e) {
             logger.error("failed to update trust list config", e);
@@ -111,9 +119,16 @@ public class VerificationService {
      *
      * @return a JWKs object as required by the SDK-core mapped from a list of ClientCerts
      */
-    private Jwks getDSCs() throws URISyntaxException {
-        logger.info("Updating list of DSCs");
+    private Jwks getDSCs(String country) throws URISyntaxException {
+        if(country == null) {
+            logger.info("Updating list of DSCs for all countries");
+        }else{
+            logger.info("Updating list of DSCs for {}", country);
+        }
         Map<String, String> params = getKeyUpdatesParams();
+        if(country != null){
+            params.put("country", country);
+        }
         List<Jwk> jwkList = new ArrayList<>();
         boolean done = false;
         int it = 0;
@@ -312,6 +327,35 @@ public class VerificationService {
                 : getOutdatedTrustListState(state);
     }
 
+
+
+
+    public VerificationState verifyDccForRenewal(CertificateHolder certificateHolder){
+        TrustList trustList = trustListConfig.getRenewalTrustList();
+        VerificationState state =
+                VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
+
+        //Certain verification failures are accepted in the renewal case as long as it's not revoked
+        if(state instanceof INVALID && (((INVALID) state).getRevocationState() instanceof  CheckRevocationState.SUCCESS)){
+            var signatureState = ((INVALID) state).getSignatureState();
+
+            //As long as the signature is ok, we can ignore rule failures
+            if(signatureState instanceof CheckSignatureState.SUCCESS){
+                state = DUMMY_SUCCESS_STATE;
+            //If the signature has expired but is otherwise ok, the cert is also approved for renewal
+            }else if(signatureState instanceof CheckSignatureState.INVALID){
+                var invalidState = (CheckSignatureState.INVALID) signatureState;
+                if(invalidState.getSignatureErrorCode().equals(
+                        ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)){
+                    state = DUMMY_SUCCESS_STATE;
+                }
+            }
+        }
+        return !trustListConfig.isOutdated() || state instanceof VerificationState.ERROR
+                ? state
+                : getOutdatedTrustListState(state);
+    }
+
     /**
      * returns an invalid response for outdated trust list. signature validation is also allowed
      * with outdated trust list data (significant for pdf export)
@@ -343,8 +387,8 @@ public class VerificationService {
                 signatureState,
                 new CheckRevocationState.INVALID(TRUST_LIST_OUTDATED),
                 new CheckNationalRulesState.INVALID(
-                        NationalRulesError.UNKNOWN_RULE_FAILED, false, TRUST_LIST_OUTDATED),
-                null);
+                        NationalRulesError.UNKNOWN_RULE_FAILED, false, TRUST_LIST_OUTDATED, ""),
+                null, "");
     }
 
     public List<ActiveModes> getWalletVerificationModes(){
