@@ -89,7 +89,7 @@ public class VerificationService {
 
     @Value("${verifier.api-key:}")
     private String apiKey;
-    private final String SHOW_RENEW_BANNER = "showRenewBanner";
+    private final static String SHOW_RENEW_BANNER = "showRenewBanner";
 
     public VerificationService(RestTemplate rt) {
         this.rt = rt;
