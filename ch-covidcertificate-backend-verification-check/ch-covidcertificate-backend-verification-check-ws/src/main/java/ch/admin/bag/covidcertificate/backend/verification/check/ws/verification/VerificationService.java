@@ -70,7 +70,7 @@ public class VerificationService {
 
     private final RestTemplate rt;
 
-    private final VerificationState DUMMY_SUCCESS_STATE = new VerificationState.SUCCESS(new VerifierSuccessState(new ModeValidity("", ModeValidityState.UNKNOWN)), false);
+    private static final VerificationState DUMMY_SUCCESS_STATE = new VerificationState.SUCCESS(new VerifierSuccessState(new ModeValidity("", ModeValidityState.UNKNOWN)), false);
 
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
