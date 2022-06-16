@@ -18,8 +18,11 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidity;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidityState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.SuccessState.VerifierSuccessState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.SuccessState.WalletSuccessState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.INVALID;
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.LOADING;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.SUCCESS;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes;
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.DisplayRule;
@@ -86,6 +89,7 @@ public class VerificationService {
 
     @Value("${verifier.api-key:}")
     private String apiKey;
+    private final String SHOW_RENEW_BANNER = "showRenewBanner";
 
     public VerificationService(RestTemplate rt) {
         this.rt = rt;
@@ -334,7 +338,17 @@ public class VerificationService {
         TrustList trustList = trustListConfig.getRenewalTrustList();
         VerificationState state =
                 VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
-
+        String renewBanner = null;
+        if(state instanceof ERROR || state instanceof LOADING){
+            return state;
+        }else if(state instanceof SUCCESS){
+            renewBanner = ((WalletSuccessState)((SUCCESS) state).getSuccessState()).getShowRenewBanner();
+        } else if (state instanceof INVALID) {
+            renewBanner = ((INVALID) state).getShowRenewBanner();
+        }
+        if(!SHOW_RENEW_BANNER.equals(renewBanner)){
+            return new INVALID(null, null, null, null, null);
+        }
         //Certain verification failures are accepted in the renewal case as long as it's not revoked
         if(state instanceof INVALID && (((INVALID) state).getRevocationState() instanceof  CheckRevocationState.SUCCESS)){
             var signatureState = ((INVALID) state).getSignatureState();
