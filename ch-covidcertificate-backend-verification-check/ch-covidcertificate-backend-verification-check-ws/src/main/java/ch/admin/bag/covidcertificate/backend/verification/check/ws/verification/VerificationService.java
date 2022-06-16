@@ -15,9 +15,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckNationalRulesSta
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckRevocationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.CheckSignatureState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState;
-import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidity;
-import ch.admin.bag.covidcertificate.sdk.core.models.state.ModeValidityState;
-import ch.admin.bag.covidcertificate.sdk.core.models.state.SuccessState.VerifierSuccessState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.SuccessState.WalletSuccessState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState;
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState.ERROR;
@@ -73,7 +70,9 @@ public class VerificationService {
 
     private final RestTemplate rt;
 
-    private static final VerificationState DUMMY_SUCCESS_STATE = new VerificationState.SUCCESS(new VerifierSuccessState(new ModeValidity("", ModeValidityState.UNKNOWN)), false);
+    private static final VerificationState DUMMY_SUCCESS_STATE =
+            new VerificationState.SUCCESS(
+                    new WalletSuccessState(false, null, new ArrayList<>(), null, null), false);
 
     @Value("${verifier.baseurl}")
     private String verifierBaseUrl;
@@ -89,6 +88,7 @@ public class VerificationService {
 
     @Value("${verifier.api-key:}")
     private String apiKey;
+
     private static final String SHOW_RENEW_BANNER = "showRenewBanner";
 
     public VerificationService(RestTemplate rt) {
@@ -110,7 +110,8 @@ public class VerificationService {
             this.trustListConfig.setTrustList(new TrustList(jwks, revokedCerts, nationalRules));
             this.trustListConfig.setRevokedCertificatesRepository(revokedCerts);
             this.trustListConfig.setLastSync(Instant.now());
-            this.trustListConfig.setRenewalTrustList(new TrustList(jwksCh, revokedCerts, nationalRules));
+            this.trustListConfig.setRenewalTrustList(
+                    new TrustList(jwksCh, revokedCerts, nationalRules));
             logger.info("done updating trust list config");
         } catch (Exception e) {
             logger.error("failed to update trust list config", e);
@@ -124,13 +125,13 @@ public class VerificationService {
      * @return a JWKs object as required by the SDK-core mapped from a list of ClientCerts
      */
     private Jwks getDSCs(String country) throws URISyntaxException {
-        if(country == null) {
+        if (country == null) {
             logger.info("Updating list of DSCs for all countries");
-        }else{
+        } else {
             logger.info("Updating list of DSCs for {}", country);
         }
         Map<String, String> params = getKeyUpdatesParams();
-        if(country != null){
+        if (country != null) {
             params.put("country", country);
         }
         List<Jwk> jwkList = new ArrayList<>();
@@ -140,7 +141,7 @@ public class VerificationService {
             final ResponseEntity<Jwks> response =
                     rt.exchange(getRequestEntity(dscEndpoint, params), Jwks.class);
             var body = response.getBody();
-            if(body != null){
+            if (body != null) {
                 jwkList.addAll(body.getCerts());
             }
 
@@ -191,7 +192,7 @@ public class VerificationService {
                 rt.exchange(
                         getRequestEntity(revocationEndpoint, params), RevokedCertificates.class);
         RevokedCertificates revokedCerts = response.getBody();
-        if(revokedCerts == null){
+        if (revokedCerts == null) {
             logger.error("Failed to get revoked certificates");
             throw new NullPointerException("Failed to get revoked certificates");
         }
@@ -207,11 +208,11 @@ public class VerificationService {
                         rt.exchange(
                                 getRequestEntity(revocationEndpoint, params),
                                 RevokedCertificates.class);
-                if(response.getBody() != null) {
+                if (response.getBody() != null) {
                     var body = response.getBody();
-                    if(body != null){
+                    if (body != null) {
                         repo.addCertificates(body.getRevokedCerts());
-                    }else{
+                    } else {
                         logger.error("Failed to fetch some of the revoked certificates");
                     }
                 }
@@ -222,7 +223,7 @@ public class VerificationService {
 
             it++;
         }
-            logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
+        logger.info("downloaded {} revoked certificates", revokedCerts.getRevokedCerts().size());
 
         return repo;
     }
@@ -239,7 +240,7 @@ public class VerificationService {
                                 getRequestEntity(rulesEndpoint, new HashMap<>()),
                                 IntermediateRuleSet.class)
                         .getBody();
-        if(intermediateRuleSet == null){
+        if (intermediateRuleSet == null) {
             logger.error("Failed to fetch national rules");
             throw new NullPointerException("intermediateRuleSet is null");
         }
@@ -267,7 +268,12 @@ public class VerificationService {
                         .map(rule -> new DisplayRule(rule.getId(), rule.getLogic()))
                         .collect(Collectors.toList());
         ModeRules intermediateModeRules = intermediateRuleSet.getModeRules();
-        ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules = new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(intermediateModeRules.getActiveModes(), intermediateModeRules.getWalletActiveModes(), intermediateModeRules.getVerifierActiveModes(), intermediateModeRules.getLogic());
+        ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules sdkModeRules =
+                new ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ModeRules(
+                        intermediateModeRules.getActiveModes(),
+                        intermediateModeRules.getWalletActiveModes(),
+                        intermediateModeRules.getVerifierActiveModes(),
+                        intermediateModeRules.getLogic());
         logger.info("downloaded {} rules", rules.size());
 
         return new RuleSet(
@@ -322,45 +328,49 @@ public class VerificationService {
                 : getOutdatedTrustListState(state);
     }
 
-    public VerificationState verifyDccSingleMode(CertificateHolder certificateHolder, String mode){
+    public VerificationState verifyDccSingleMode(CertificateHolder certificateHolder, String mode) {
         TrustList trustList = trustListConfig.getTrustList();
         VerificationState state =
-                VerifyWrapper.verifyVerifier(certificateVerifier, certificateHolder, trustList, mode);
+                VerifyWrapper.verifyVerifier(
+                        certificateVerifier, certificateHolder, trustList, mode);
         return !trustListConfig.isOutdated() || state instanceof VerificationState.ERROR
                 ? state
                 : getOutdatedTrustListState(state);
     }
 
-
-
-
-    public VerificationState verifyDccForRenewal(CertificateHolder certificateHolder){
+    public VerificationState verifyDccForRenewal(CertificateHolder certificateHolder) {
         TrustList trustList = trustListConfig.getRenewalTrustList();
         VerificationState state =
                 VerifyWrapper.verifyWallet(certificateVerifier, certificateHolder, trustList);
         String renewBanner = null;
-        if(state instanceof ERROR || state instanceof LOADING){
+        if (state instanceof ERROR || state instanceof LOADING) {
             return state;
-        }else if(state instanceof SUCCESS){
-            renewBanner = ((WalletSuccessState)((SUCCESS) state).getSuccessState()).getShowRenewBanner();
+        } else if (state instanceof SUCCESS) {
+            renewBanner =
+                    ((WalletSuccessState) ((SUCCESS) state).getSuccessState()).getShowRenewBanner();
         } else if (state instanceof INVALID) {
             renewBanner = ((INVALID) state).getShowRenewBanner();
         }
-        if(!SHOW_RENEW_BANNER.equals(renewBanner)){
+        if (!SHOW_RENEW_BANNER.equals(renewBanner)) {
             return new INVALID(null, null, null, null, null);
         }
-        //Certain verification failures are accepted in the renewal case as long as it's not revoked
-        if(state instanceof INVALID && (((INVALID) state).getRevocationState() instanceof  CheckRevocationState.SUCCESS)){
+        // Certain verification failures are accepted in the renewal case as long as it's not
+        // revoked
+        if (state instanceof INVALID
+                && (((INVALID) state).getRevocationState()
+                        instanceof CheckRevocationState.SUCCESS)) {
             var signatureState = ((INVALID) state).getSignatureState();
 
-            //As long as the signature is ok, we can ignore rule failures
-            if(signatureState instanceof CheckSignatureState.SUCCESS){
+            // As long as the signature is ok, we can ignore rule failures
+            if (signatureState instanceof CheckSignatureState.SUCCESS) {
                 state = DUMMY_SUCCESS_STATE;
-            //If the signature has expired but is otherwise ok, the cert is also approved for renewal
-            }else if(signatureState instanceof CheckSignatureState.INVALID){
+                // If the signature has expired but is otherwise ok, the cert is also approved for
+                // renewal
+            } else if (signatureState instanceof CheckSignatureState.INVALID) {
                 var invalidState = (CheckSignatureState.INVALID) signatureState;
-                if(invalidState.getSignatureErrorCode().equals(
-                        ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)){
+                if (invalidState
+                        .getSignatureErrorCode()
+                        .equals(ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)) {
                     state = DUMMY_SUCCESS_STATE;
                 }
             }
@@ -402,15 +412,15 @@ public class VerificationService {
                 new CheckRevocationState.INVALID(TRUST_LIST_OUTDATED),
                 new CheckNationalRulesState.INVALID(
                         NationalRulesError.UNKNOWN_RULE_FAILED, false, TRUST_LIST_OUTDATED, ""),
-                null, "");
+                null,
+                "");
     }
 
-    public List<ActiveModes> getWalletVerificationModes(){
+    public List<ActiveModes> getWalletVerificationModes() {
         return trustListConfig.getTrustList().getRuleSet().getModeRules().getActiveModes();
     }
 
-    public List<ActiveModes> getVerifierVerificationModes(){
+    public List<ActiveModes> getVerifierVerificationModes() {
         return trustListConfig.getTrustList().getRuleSet().getModeRules().getVerifierActiveModes();
     }
-
 }
