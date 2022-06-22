@@ -10,6 +10,8 @@ public class TrustListConfig {
 
     private RevokedCertificatesRepository revokedCertificatesRepository;
 
+    private TrustList renewalTrustList;
+
     public RevokedCertificatesRepository getRevokedCertificatesRepository() {
         return revokedCertificatesRepository;
     }
@@ -41,5 +43,14 @@ public class TrustListConfig {
                         now.minusMillis(revokedCertificatesRepository.getValidDuration()))
                 || this.lastSync.isBefore(
                         now.minusMillis(trustList.getRuleSet().getValidDuration()));
+    }
+
+    public TrustList getRenewalTrustList() {
+        return renewalTrustList;
+    }
+
+    public void setRenewalTrustList(
+            TrustList renewalTrustList) {
+        this.renewalTrustList = renewalTrustList;
     }
 }
