@@ -57,7 +57,7 @@ jobs:
         run: |
           mvn --batch-mode compile com.google.cloud.tools:jib-maven-plugin:3.1.4:build -f ch-covidcertificate-backend-verification-check/ch-covidcertificate-backend-verification-check-ws/pom.xml \
           -Dimage=${{ secrets.DOCKER_HUB_USERNAME}}/${{ env.APP_NAME }} \
-          -Djib.from.image=adoptopenjdk:11-jre \
+          -Djib.from.image=eclipse-temurin:17 \
           -Djib.to.auth.username=${{ secrets.DOCKER_HUB_USERNAME }} \
           -Djib.to.auth.password=${{ secrets.DOCKER_HUB }} \
           -Djib.container.volumes=/config/ \
