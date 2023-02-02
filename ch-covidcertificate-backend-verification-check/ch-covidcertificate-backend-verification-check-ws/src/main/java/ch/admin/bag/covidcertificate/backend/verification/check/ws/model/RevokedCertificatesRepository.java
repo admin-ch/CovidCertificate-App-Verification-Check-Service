@@ -26,6 +26,12 @@ public class RevokedCertificatesRepository implements RevokedCertificatesStore {
         return revokedCertificates.getValidDuration();
     }
 
+    @NotNull
+    @Override
+    public String getPrepopulatedSinceHeader(boolean b) {
+        return "";
+    }
+
     public static class RevokedCertificates {
         private List<String> revokedCerts;
         private long validDuration;

@@ -31,6 +31,10 @@ object TestData {
                 override fun containsCertificate(certificate: String): Boolean {
                     return certs.contains(certificate)
                 }
+
+                override fun getPrepopulatedSinceHeader(isProd: Boolean): String {
+                    return ""
+                }
             },
 
             ruleSet ?: RuleSet(
