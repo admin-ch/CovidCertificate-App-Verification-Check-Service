@@ -18,7 +18,7 @@
 
     <properties>
         <java-version>11</java-version>
-        <kotlin.version>1.8.0</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -90,7 +90,7 @@
         <dependency>
             <groupId>ch.admin.bag.covidcertificate</groupId>
             <artifactId>cc-backend-logging</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
 
         <!-- LogBack dependencies -->
